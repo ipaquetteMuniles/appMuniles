@@ -1,49 +1,58 @@
-import React from 'react';
-import { StyleSheet, Text, View, WebView } from 'react-native';
+////////////////////////////////////////////////
+// Municipalité des îles-de-la-Madeleine
+// Auteur :Iohann Paquette
+// Date : 2024-05-07 
+////////////////////////////////////////////////
+
+////////////////////////////////////////////////
+//Bibliothèques
+////////////////////////////////////////////////
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { auth } from '../firebase/fire';
-import { signOut } from "firebase/auth";
 import FormButton from '../components/FormButton';
+import axios from 'axios';
+
+import Header from '../components/header';
 
 const HomeScreen = ({ navigation }) => {
     const user = auth.currentUser
 
-    const logout = () => {
-        signOut(auth).then(() => {
-            navigation.navigate("Connexion")
-        }).catch((error) => {
-            // An error happened.
-        });
-    }
+    const loginToEnteliweb = async () => {
+        try {
 
-    const enteliweb = 'http://10.1.1.15/enteliweb'
-    const argument = { arg1: 'valeur1', arg2: 'valeur2' };
-    const argumentsString = Object.keys(argument).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(argument[key])}`).join('&');
-    const pageUrl = `${enteliweb}/page-tierce?${argumentsString}`;
+            const enteliwebURL = 'http://10.1.1.15/enteliweb'
+            const username = 'Jmleblanc'
+            const password = 'IDLM2023!'
+
+            const response = await axios.post(enteliwebURL, {
+                username: username,
+                password: password
+            });
+
+            // Check if the login was successful
+            if (response.status === 200) {
+                // Log in successful, do something (e.g., store token, navigate to another screen)
+                console.log('Login successful');
+            } else {
+                // Login failed, handle error
+                console.error('Login failed');
+            }
+        } catch (error) {
+            console.error('Error logging in:', error);
+        }
+    };
+
+    useEffect(()=>{
+        loginToEnteliweb()
+    },[])
 
     return (
         <View style={styles.container}>
             {/* Informations utilisateur */}
-            <View style={styles.header}>
-                <View>
-                    <Text>{user.email}</Text>
-                </View>
+            <Header navigation={navigation} nomPage={'HomeScreen'}/>
 
-                {/* Logout */}
-                <View>
-                    <FormButton
-                        buttonTitle={'Deconnexion'}
-                        backgroundColor='red'
-                        color='white'
-                        onPress={logout}
-                    />
-                </View>
-            </View>
-
-            {/* WebView pour afficher la page tierce avec les arguments */}
-            <WebView
-                source={{ uri: pageUrl }}
-                style={{ flex: 1 }}
-            />
+          
         </View>
     );
 }
@@ -56,13 +65,5 @@ const styles = StyleSheet.create({
         backgroundColor: '#060270',
         margin: 10,
         borderRadius: 60
-    },
-    header: {
-        margin: 20,
-        backgroundColor: 'white',
-        borderRadius: 60,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center'
     }
 });

@@ -16,6 +16,7 @@ import {auth} from '../firebase/fire'
 //Composants
 ////////////////////////////////////////////////
 import FormButton from '../components/FormButton';
+import FormInput from '../components/FormInput';
 ////////////////////////////////////////////////
 // App
 ////////////////////////////////////////////////
@@ -46,37 +47,24 @@ const LoginScreen = ({ navigation, route }) => {
                 resizeMethod='contains'
                 style={{ width: '20%', width: '20%' }}
             />
-
-            {/* field 1 - adresse courriel */}
-            <View style={styles.field}>
-                <Text style={{ fontSize: 25, color: 'white', fontWeight: 'bold' }}>Courriel</Text>
-                <TextInput
-                    autoFocus
-                    placeholder='name@muniles.ca'
-                    onChangeText={setCourriel}
-                    value={courriel}
-                    style={{ color: '#ffffff', borderColor: 'gray', borderWidth: 1, padding: 10, borderRadius: 60 }}
-                    placeholderTextColor={'gray'}
-                    blurOnSubmit
-                    textContentType='emailAddress'
-                />
-            </View>
+            {/* courriel */}
+            <FormInput 
+                label={'Courriel'}
+                placeholder={'name@muniles.ca'}
+                useState={setCourriel}
+                valueUseState={courriel}
+                textContentType='emailAddress'
+            />
 
             {/* field 2 - MDP */}
-            <View style={styles.field}>
-                <Text style={{ fontSize: 25, color: 'white', fontWeight: 'bold' }}>Mot de passe</Text>
-                <TextInput
-                    autoFocus
-                    placeholder='...'
-                    onChangeText={setMdp}
-                    value={mdp}
-                    style={{ color: '#ffffff', borderColor: 'gray', borderWidth: 1, padding: 10, borderRadius: 60 }}
-                    placeholderTextColor={'gray'}
-                    blurOnSubmit
-                    textContentType='emailAddress'
-                    secureTextEntry
-                />
-            </View>
+            <FormInput 
+                label={'Mot de passe'}
+                placeholder={'###'}
+                useState={setMdp}
+                valueUseState={mdp}
+                textContentType='password'
+                secureTextEntry={true}
+            />
 
             {/* submit button */}
             <FormButton onPress={connect} buttonTitle={'Connexion'} />
