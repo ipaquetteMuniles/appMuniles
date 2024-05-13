@@ -27,7 +27,6 @@ const LoginScreen = ({ navigation, route }) => {
     [mdp, setMdp] = useState("");
 
     const connect = () => {
-        console.log('Connection ...')
         signInWithEmailAndPassword(auth, courriel, mdp)
             .then((userCredential) => {
                 // Signed in 

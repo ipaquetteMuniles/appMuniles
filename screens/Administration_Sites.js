@@ -10,21 +10,26 @@ un serveur python, qui lui se connectera a un thermostat intelligent */
 ////////////////////////////////////////////////
 //Bibliothèques
 ////////////////////////////////////////////////
-import { StyleSheet, Text, View,ScrollView } from 'react-native';
-
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import axios from 'axios';
 ////////////////////////////////////////////////
 //Composants
 ////////////////////////////////////////////////
 import Header from '../components/header';
 import { auth } from '../firebase/fire';
+import { useEffect } from 'react';
 ////////////////////////////////////////////////
 // App
 ////////////////////////////////////////////////
 const Administration = () => {
 
+    //Constantes
     const user = auth.currentUser
 
-    const envoyerRequeteServeur = () => {
+    const EnteliWebPlatformURL = 'http://10.1.1.15/enteliweb';
+
+    //Fonctions
+    const envoyerRequeteServeurGoogleNest = () => {
         // Exemple en utilisant fetch
         const url = 'http://votre_adresse_ip_locale:5000/set_temperature'
         fetch(url, {
@@ -58,7 +63,7 @@ const Administration = () => {
                     </Text>
 
                     {/* site 1 */}
-                    <View></View>
+
 
                     {/* site 2 */}
                     <View></View>

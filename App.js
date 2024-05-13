@@ -22,8 +22,8 @@ export const UserContext = createContext();
 //Composants
 ////////////////////////////////////////////////
 import LoginScreen from './screens/Login';
-import HomeScreen from './screens/HomeScreen';
 import MazoutConsommationForm from './screens/MazoutConsommation';
+import PropaneConsommationForm from './screens/PropaneConsommation';
 import Administration from './screens/Administration_Sites';
 ////////////////////////////////////////////////
 // App
@@ -51,12 +51,11 @@ const App = () => {
 
       {/* if user is connected */}
       {user && (
-        <UserContext.Provider value={user}>
+        <UserContext.Provider value={{ user, setUser }}>
           <Stack.Navigator>
-            <Stack.Screen name="Accueil" component={HomeScreen} />
-            <Stack.Screen name="MazoutConsommationForm" component={MazoutConsommationForm} />
-            <Stack.Screen name="Administration" component={Administration} />
-
+            <Stack.Screen name="MazoutConsommationForm" component={MazoutConsommationForm} options={{headerShown:false}}/>
+            <Stack.Screen name="PropaneConsommationForm" component={PropaneConsommationForm} options={{headerShown:false}}/>
+            <Stack.Screen name="Administration" component={Administration} options={{headerShown:false}}/>
           </Stack.Navigator>
         </UserContext.Provider>
       )}

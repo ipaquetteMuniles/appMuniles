@@ -22,43 +22,32 @@ import Header from '../components/header';
 import FormInput from '../components/FormInput';
 import FormButton from '../components/FormButton';
 import Popup from '../components/Popup';
-import { lites_batiments_mazout } from '../utiles/liste_batiments_mazout';
+import { liste_batiments_propane } from '../utiles/liste_batiments_propane';
 
-const MazoutConsommationForm = ({ navigation, route }) => {
+const PropaneConsommationForm = ({ navigation, route }) => {
     const user = auth.currentUser;
     const [isAdmin, setIsAdmin] = useState(false)
 
     const [numProduit, setNumProduit] = useState('');
     const [date, setDate] = useState(new Date());
-
+    const [textModal, setTextModal] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
     //drodownlist
     const [nomsite, setNomsite] = useState('');
 
-    const [prixTotal, setPrixTotal] = useState('');
-    const [prixUnitaire, setPrixUnitaire] = useState('');
-    const [nomMazout, setNomMazout] = useState('');
-    const [quantite, setQuantite] = useState('');
-    const [textModal, setTextModal] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-
-    const [dataMazout, setDataMazout] = useState([])
+    const [dataPropane, setDataPropane] = useState([])
 
     const submit = async () => {
 
-        if (!numProduit || !nomsite || !prixTotal || !prixUnitaire || !nomMazout || !quantite) {
+        if (!numProduit || !nomsite) {
             setTextModal('Assurez-vous de remplir tous les champs du formulaire.');
             setModalVisible(true);
         } else {
-            const tableName = "ConsommationMazout"
+            const tableName = "ConsommationPropane"
 
             await addDoc(collection(db, tableName), {
                 date: date,
-                numProduit: numProduit,
-                nomsite: nomsite,
-                prixUnitaire: prixUnitaire,
-                prixTotal: prixTotal,
-                nomMazout: nomMazout,
-                quantite: quantite,
+                numProduit: numProduit
             })
                 .then(() => {
                     //Annoncer que les données ont été submit
@@ -66,14 +55,10 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                     setModalVisible(true);
 
                     //reset les entrées
-                    setNumProduit('');
-                    setDate(new Date());
-                    setNomsite('');
-                    setPrixTotal('');
-                    setPrixUnitaire('');
-                    setNomMazout('');
-                    setQuantite('');
-                    setDataMazout([])
+                    setDate(new Date())
+                    setNomsite('')
+                    setNumProduit('')
+                    setDataPropane([])
                 })
                 .catch((err) => {
                     setErreur('Erreur interne : Contacter iohann');
@@ -95,10 +80,10 @@ const MazoutConsommationForm = ({ navigation, route }) => {
         }
     }
 
-    const getMazoutData = async () => {
+    const getPropaneData = async () => {
         //aller chercher toute les données du Mazout dans la BD
         let array = []
-        const tableName = "ConsommationMazout"
+        const tableName = "ConsommationPropane"
         await getDocs(collection(db, tableName))
             .then((d) => {
                 //foreach doc
@@ -107,25 +92,25 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                 })
             })
 
-        setDataMazout(array)
+        setDataPropane(array)
     }
 
     useEffect(() => {
         getUserInfo()
-        getMazoutData()
+        getPropaneData()
     }, [])
 
     return (
         <View style={styles.container}>
-            <Header navigation={navigation} nomPage={'MazoutConsommationForm'} />
+            <Header navigation={navigation} nomPage={'PropaneConsommationForm'} />
             <ScrollView>
                 <View style={styles.formContainer}>
-                    <Text style={styles.title}>Formulaire de consommation de Mazout</Text>
+                    <Text style={styles.title}>Formulaire de consommation de Propane</Text>
 
                     {/* si administrateur, alors peut downloader le excel avec données */}
                     {isAdmin && (
                         <View style={styles.buttonContainer}>
-                            <CsvDownloadButton data={dataMazout} filename={`Mazout_${new Date().toLocaleDateString()}`} />
+                            <CsvDownloadButton data={dataPropane} filename={`Propane_${new Date().toLocaleDateString()}`} />
                         </View>
                     )}
 
@@ -154,67 +139,21 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                         />
                     </View>
 
-
-                    {/* Type de mazout */}
-                    <View style={styles.field}>
-                        <FormInput
-                            label={"Type de mazout"}
-                            placeholder={"coloré, ... ?"}
-                            useState={setNomMazout}
-                            valueUseState={nomMazout}
-                            textContentType={'none'}
-                        />
-                    </View>
-
                     {/* nomsite */}
                     <View style={styles.field}>
-                        <Text style={styles.label}>Nom du site</Text>
+                        <Text style={styles.label}>Nom du site de la livraison</Text>
                         <Picker
                             selectedValue={nomsite}
                             onValueChange={(itemValue, itemIndex) =>
                                 setNomsite(itemValue)
                             }>
                             <Picker.Item label={'Sélectionner un élément'} value={null} />
-                            {lites_batiments_mazout.map((item, index) => (
+                            {liste_batiments_propane.map((item, index) => (
                                 <Picker.Item key={index} label={item} value={item} />
                             ))}
                         </Picker>
                     </View>
 
-                    {/* Montant après taxe, total */}
-                    <View style={styles.field}>
-                        <FormInput
-                            label={"Montant total"}
-                            placeholder={"après taxe ... $"}
-                            useState={setPrixTotal}
-                            valueUseState={prixTotal}
-                            textContentType={'none'}
-                        />
-                    </View>
-
-                    {/* Quantité */}
-                    <View style={styles.field}>
-                        <FormInput
-                            label={"Quantité (L)"}
-                            placeholder={"Qt en litres"}
-                            useState={setQuantite}
-                            valueUseState={quantite}
-                            textContentType={'number'}
-                            keyboardType={'numeric'}
-                        />
-                    </View>
-
-                    {/* Prix unitaire */}
-                    <View style={styles.field}>
-                        <FormInput
-                            label={"Prix unitaire du litre"}
-                            placeholder={"Prix au litre"}
-                            useState={setPrixUnitaire}
-                            valueUseState={prixUnitaire}
-                            textContentType={'number'}
-                            keyboardType={'numeric'}
-                        />
-                    </View>
 
                 </View>
 
@@ -278,4 +217,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default MazoutConsommationForm;
+export default PropaneConsommationForm;

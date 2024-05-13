@@ -21,12 +21,12 @@ import { UserContext } from '../App';
 ////////////////////////////////////////////////
 const Header = ({ navigation, nomPage }) => {
 
-    const user = useContext(UserContext)
+    const { user,setUser } = useContext(UserContext);
 
     const logout = () => {
         signOut(auth).then(() => {
             //logout suceess
-           auth.currentUser.reload()
+            setUser(null);
         }).catch((error) => {
             // An error happened.
         });
@@ -49,7 +49,7 @@ const Header = ({ navigation, nomPage }) => {
             </View>
 
             {/* tabs */}
-            {nomPage != 'HomeScreen' && (
+            {/* {nomPage != 'HomeScreen' && (
                 <View>
                     <FormButton
                         buttonTitle={'Accueil'}
@@ -58,7 +58,7 @@ const Header = ({ navigation, nomPage }) => {
                         onPress={() => navigation.navigate("Accueil")}
                     />
                 </View>
-            )}
+            )} */}
 
             {nomPage != 'MazoutConsommationForm' && (
                 <View>
@@ -67,6 +67,17 @@ const Header = ({ navigation, nomPage }) => {
                         backgroundColor='#060270'
                         color='white'
                         onPress={() => navigation.navigate("MazoutConsommationForm")}
+                    />
+                </View>
+            )}
+
+            {nomPage != 'PropaneConsommationForm' && (
+                <View>
+                    <FormButton
+                        buttonTitle={'Formulaire Propane'}
+                        backgroundColor='#060270'
+                        color='white'
+                        onPress={() => navigation.navigate("PropaneConsommationForm")}
                     />
                 </View>
             )}
