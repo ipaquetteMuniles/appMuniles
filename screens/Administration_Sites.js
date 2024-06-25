@@ -28,7 +28,7 @@ import FormButton from '../components/FormButton';
 const Administration = ({ navigation, route }) => {
 
     //Constantes
-    const [userPortal,setUserPortal] = useState()
+    const [userPortal, setUserPortal] = useState()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -38,13 +38,19 @@ const Administration = ({ navigation, route }) => {
     const [frequencyType, setFrequencyType] = useState('minutes'); // 'minutes', 'hours', 'days'
     const [loading, setLoading] = useState(false)
     const [isCollecting, setIsCollecting] = useState(false)
-    const [choix,setChoix] = useState()
-    const [zones,setZones] = useState([])
+    const [choix, setChoix] = useState()
+    const [zones, setZones] = useState([])
     const [collectedData, setCollectedData] = useState([]);
 
     const ipAdress = '127.0.0.1'
 
     const startCollection = async () => {
+
+        if(choix == null)
+        {
+            alert('Veuillez choisir une zone')
+            return
+        }
         try {
             setLoading(true);
             const response = await axios.post(`http://${ipAdress}:5000/start`, {
@@ -53,17 +59,16 @@ const Administration = ({ navigation, route }) => {
                 frequency_type: frequencyType,
             });
 
-            if(response.statusText == 'OK')
-            {
+            if (response.statusText == 'OK') {
                 setIsCollecting(true)
 
                 const eventSource = new EventSource(`http://${ipAdress}:5000/events`);
-                eventSource.onerror = (error) =>{
+                eventSource.onerror = (error) => {
                     setIsCollecting(false)
                     setLoading(false)
                     alert('Error', 'Ereur lors de l obtention des donnes...');
                     console.error(error);
-                    
+
                 }
                 eventSource.onmessage = (event) => {
                     setLoading(false)
@@ -72,20 +77,19 @@ const Administration = ({ navigation, route }) => {
                     setCollectedData((prevData) => [...prevData, newData]);
                 };
             }
-            else
-            {
+            else {
                 setLoading(false);
                 alert('Probleme en partant le serveur')
                 return
             }
-                
+
 
         } catch (error) {
             console.error(error);
             setIsCollecting(false)
             setLoading(false)
             alert('Error', 'Failed to start data collection');
-           
+
         }
     };
 
@@ -107,15 +111,13 @@ const Administration = ({ navigation, route }) => {
         try {
             setLoading(true)
             const response = await axios.post(`http://${ipAdress}:5000/logout`)
-            
-            if(response.statusText == 'OK')
-            {
+
+            if (response.statusText == 'OK') {
                 setLoading(false)
                 setIsCollecting(false)
                 setIsConnect(false)
             }
-            else
-            {
+            else {
                 setLoading(false)
                 console.log(error)
                 alert(`Erreur lors de la deconnexion ${response.status}.. Aller sur le portail si cela est urgent`)
@@ -136,13 +138,12 @@ const Administration = ({ navigation, route }) => {
                 password,
             });
 
-            if (response.statusText == 'OK')
-                {                
-                    const z = response.data.zones
-                    setZones(z)
-                    setIsConnect(true)
-                    setUserPortal(response.data.user)
-                }
+            if (response.statusText == 'OK') {
+                const z = response.data.zones
+                setZones(z)
+                setIsConnect(true)
+                setUserPortal(response.data.user)
+            }
             setLoading(false)
         }
         catch (error) {
@@ -154,9 +155,9 @@ const Administration = ({ navigation, route }) => {
 
     if (loading) {
         return (
-            <View style={{ flex:1,alignItems:'center',justifyContent:'center'}}>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator animating={true} size={'large'} />
-                <FormButton 
+                <FormButton
                     buttonTitle={'Arreter'}
                     backgroundColor='red'
                     onPress={logout}
@@ -207,21 +208,21 @@ const Administration = ({ navigation, route }) => {
                     <View style={styles.formContainer}>
                         <Text style={styles.title}>Connecté en tant que {userPortal}</Text>
                         <Text style={styles.label}>Veuillez choisir la zone que vous souhaitez exploiter</Text>
-                        {(!choix && zones) && (
-                            zones.map((item,index)=>(
-                                <View>
-                                     <TouchableOpacity onPress={()=>setChoix(index)}>
-                                         <View style={{backgroundColor:'white',margin:10}}>
-                                             <Text style={styles.label}>{index} {item.id} - {item.name}</Text>
-                                         </View>
-                                     </TouchableOpacity>
-                                 </View>
-                             ))
-                        )}
 
-                        {choix && (
-                             (!isCollecting ? (
+                        {
+                            (!isCollecting ? (
                                 <View>
+                                    {(zones) && (
+                                        zones.map((item, index) => (
+                                            <View>
+                                                <TouchableOpacity onPress={() => setChoix(index)}>
+                                                    <View style={{ backgroundColor: 'white', margin: 10 }}>
+                                                        <Text style={styles.label}>{index} {item.id} - {item.name}</Text>
+                                                    </View>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))
+                                    )}
                                     <FormInput
                                         valueUseState={frequency}
                                         useState={setFrequency}
@@ -229,7 +230,7 @@ const Administration = ({ navigation, route }) => {
                                         label={'Fréquence de récolte'}
                                         placeholder={'1 min ? 2 min ...'}
                                     />
-    
+
                                     <FormInput
                                         valueUseState={frequencyType}
                                         useState={setFrequencyType}
@@ -237,6 +238,11 @@ const Administration = ({ navigation, route }) => {
                                         label={'Type de fréquence'}
                                         placeholder={'tous les min,heure,jours ?...'}
                                     />
+                                    {choix != null && (
+                                        <View style={{ backgroundColor: 'white', margin: 10 }}>
+                                            <Text style={styles.label}>{choix} {zones[choix].id} - {zones[choix].name}</Text>
+                                        </View>
+                                    )}
                                     <View style={styles.buttonContainer}>
                                         <FormButton buttonTitle="Commencer la collecte des données" onPress={startCollection} />
                                         <FormButton buttonTitle="Deconnexion" onPress={logout} />
@@ -247,9 +253,12 @@ const Administration = ({ navigation, route }) => {
                                     <Text style={styles.title}>Données récoltées : {collectedData.length}</Text>
                                     {collectedData.length > 0 && (
                                         <View>
-                                            <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Collected Data:</Text>
+                                            <Text style={styles.label}>Collected Data:</Text>
+                                            <Text style={styles.label}>zone_id,zone_name,timestamp,indoor_temperature,outdoor_temperature,displayUnits,indoor_humidity,outdoor_humidity,heat_setpoint,cool_setpoint,fan_status</Text>
                                             {collectedData.map((data, index) => (
-                                                <Text key={index}>{data}</Text>
+                                                <View style={{backgroundColor:'white'}}>
+                                                    <Text  style={styles.label} key={index}>{data}</Text>
+                                                </View>
                                             ))}
                                         </View>
                                     )}
@@ -258,7 +267,7 @@ const Administration = ({ navigation, route }) => {
                                     </View>
                                 </View>
                             ))
-                        )}
+                        }
 
                     </View>
                 )
@@ -279,7 +288,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
         fontWeight: 'bold',
         marginBottom: 20,
-        color:'white'
+        color: 'white'
     },
     formContainer: {
         backgroundColor: '#0E1442',
