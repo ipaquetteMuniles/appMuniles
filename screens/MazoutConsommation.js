@@ -30,14 +30,14 @@ const MazoutConsommationForm = ({ navigation, route }) => {
 
     const [numProduit, setNumProduit] = useState('');
     const [date, setDate] = useState(new Date());
-
-    //drodownlist
     const [nomsite, setNomsite] = useState('');
-
     const [prixTotal, setPrixTotal] = useState('');
     const [prixUnitaire, setPrixUnitaire] = useState('');
     const [nomMazout, setNomMazout] = useState('');
     const [quantite, setQuantite] = useState('');
+    const [description,setDescription] = useState('')//falcultatif
+
+    //Popup
     const [textModal, setTextModal] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -59,6 +59,7 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                 prixTotal: prixTotal,
                 nomMazout: nomMazout,
                 quantite: quantite,
+                description:description
             })
                 .then(() => {
                     //Annoncer que les données ont été submit
@@ -73,6 +74,7 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                     setPrixUnitaire('');
                     setNomMazout('');
                     setQuantite('');
+                    setDescription('')
                     setDataMazout([])
                 })
                 .catch((err) => {
@@ -216,6 +218,17 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                         />
                     </View>
 
+                    {/* Description optionnelle */}
+                    <View style={styles.field}>
+                        <FormInput
+                            label={"Description"}
+                            placeholder={"Optionnel ..."}
+                            useState={setDescription}
+                            valueUseState={description}
+                            textContentType={'none'}
+                            multiline={true}
+                        />
+                    </View>
                 </View>
 
                 {/* submit button */}
@@ -228,7 +241,6 @@ const MazoutConsommationForm = ({ navigation, route }) => {
                 text={textModal}
                 setModalVisible={setModalVisible}
                 modalVisible={modalVisible}
-                onCloseFct={() => console.log('all good !')}
             />
         </View>
     );

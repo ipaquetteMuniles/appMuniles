@@ -7,21 +7,21 @@
 ////////////////////////////////////////////////
 //Bibliothèques
 ////////////////////////////////////////////////
-import { StyleSheet, Text, View,Image } from 'react-native';
+import { StyleSheet, Text, View, Image } from 'react-native';
 import FormButton from '../components/FormButton';
 import { signOut } from "firebase/auth";
 import { useContext } from 'react';
 ////////////////////////////////////////////////
 //Composants
 ////////////////////////////////////////////////
-import { auth} from '../firebase/fire';
+import { auth } from '../firebase/fire';
 import { UserContext } from '../App';
 ////////////////////////////////////////////////
 // App
 ////////////////////////////////////////////////
 const Header = ({ navigation, nomPage }) => {
 
-    const { user,setUser } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
 
     const logout = () => {
         signOut(auth).then(() => {
@@ -34,64 +34,39 @@ const Header = ({ navigation, nomPage }) => {
 
     return (
         <View style={styles.header}>
-            {/* logo */}
-            <View>
-                <Image source={require('../assets/Logo_Iles_de_la_Madeleine.png')}
-                    resizeMode='contains'
-                    width={50}
-                    height={50}
-                />
-            </View>
 
             {/* courriel */}
             <View>
                 <Text>{user.email}</Text>
             </View>
 
-            {/* tabs */}
-            {/* {nomPage != 'HomeScreen' && (
-                <View>
-                    <FormButton
-                        buttonTitle={'Accueil'}
-                        backgroundColor='#060270'
-                        color='white'
-                        onPress={() => navigation.navigate("Accueil")}
-                    />
-                </View>
-            )} */}
+            <View>
+                <FormButton
+                    buttonTitle={'Formulaire Mazout'}
+                    backgroundColor='#060270'
+                    color='white'
+                    onPress={() => navigation.navigate("MazoutConsommationForm")}
+                />
+            </View>
 
-            {nomPage != 'MazoutConsommationForm' && (
-                <View>
-                    <FormButton
-                        buttonTitle={'Formulaire Mazout'}
-                        backgroundColor='#060270'
-                        color='white'
-                        onPress={() => navigation.navigate("MazoutConsommationForm")}
-                    />
-                </View>
-            )}
+            <View>
+                <FormButton
+                    buttonTitle={'Formulaire Propane'}
+                    backgroundColor='#060270'
+                    color='white'
+                    onPress={() => navigation.navigate("PropaneConsommationForm")}
+                />
+            </View>
 
-            {nomPage != 'PropaneConsommationForm' && (
-                <View>
-                    <FormButton
-                        buttonTitle={'Formulaire Propane'}
-                        backgroundColor='#060270'
-                        color='white'
-                        onPress={() => navigation.navigate("PropaneConsommationForm")}
-                    />
-                </View>
-            )}
 
-            {nomPage != 'Administration' && (
-                <View>
-                    <FormButton
-                        buttonTitle={'Administration'}
-                        backgroundColor='#060270'
-                        color='white'
-                        onPress={() => navigation.navigate("Administration")}
-                    />
-                </View>
-            )}
+            <View>
+                <FormButton
+                    buttonTitle={'Administration'}
+                    backgroundColor='#060270'
+                    color='white'
+                    onPress={() => navigation.navigate("Administration")}
+                />
+            </View>
 
             {/* Logout */}
             <View>

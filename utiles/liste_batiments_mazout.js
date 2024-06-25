@@ -5,5 +5,6 @@ export const lites_batiments_mazout = [
     "Garage HAM",
     "Entrepôt-Ancien garage EDN",
     "Génératrice mairie",
-    "Génératrice-Station eau usée"
+    "Génératrice-Station eau usée",
+    'Autres'
 ];

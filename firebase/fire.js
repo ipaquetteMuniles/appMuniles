@@ -1,7 +1,9 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+
+const recaptchaKey = '6LdKUtwpAAAAAEXv1hArBYrM4y3haed6k82zlU2Y'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -15,6 +17,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider(recaptchaKey),
+  isTokenAutoRefreshEnabled: true
+});
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);

@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////
 //Bibliothèques
 ////////////////////////////////////////////////
+
 import { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, Image } from 'react-native';
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -15,16 +16,23 @@ import {auth} from '../firebase/fire'
 ////////////////////////////////////////////////
 //Composants
 ////////////////////////////////////////////////
+
 import FormButton from '../components/FormButton';
 import FormInput from '../components/FormInput';
+import Popup from '../components/Popup';
+
 ////////////////////////////////////////////////
 // App
 ////////////////////////////////////////////////
 
 const LoginScreen = ({ navigation, route }) => {
     //usestate
-    [courriel, setCourriel] = useState("");
-    [mdp, setMdp] = useState("");
+    const [courriel, setCourriel] = useState("");
+    const [mdp, setMdp] = useState("");
+
+    //Popup
+    const [textModal, setTextModal] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
 
     const connect = () => {
         signInWithEmailAndPassword(auth, courriel, mdp)
@@ -35,6 +43,18 @@ const LoginScreen = ({ navigation, route }) => {
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
+                console.log(error)
+                
+                if(errorCode === 'auth/invalid-credential')
+                {
+                    setTextModal('Entrées invalides, veuillez corriger et réessayer.')
+                    setModalVisible(true)
+                }
+                else
+                {
+                    setTextModal('Erreur lors de la connexion, veuillez réessayer plus tard.')
+                    setModalVisible(true)
+                }
             });
     }
 
@@ -44,7 +64,7 @@ const LoginScreen = ({ navigation, route }) => {
             <Image
                 source={require('../assets/Logo_Iles_de_la_Madeleine.png')}
                 resizeMethod='contains'
-                style={{ width: '20%', width: '20%' }}
+                style={{ width: 500, height: 100 }}
             />
             {/* courriel */}
             <FormInput 
@@ -63,10 +83,17 @@ const LoginScreen = ({ navigation, route }) => {
                 valueUseState={mdp}
                 textContentType='password'
                 secureTextEntry={true}
+                multiline={false}
             />
 
             {/* submit button */}
             <FormButton onPress={connect} buttonTitle={'Connexion'} />
+
+            <Popup
+                text={textModal}
+                setModalVisible={setModalVisible}
+                modalVisible={modalVisible}
+            />
         </View>
     );
 }

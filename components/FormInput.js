@@ -16,7 +16,7 @@ import { StyleSheet, Text, View,TextInput } from 'react-native';
 ////////////////////////////////////////////////
 // FormInput
 ////////////////////////////////////////////////
-const FormInput = ({ label, placeholder, useState, valueUseState, secureTextEntry = false, textContentType,keyboardType }) => {
+const FormInput = ({ label, placeholder, useState, valueUseState, secureTextEntry = false, textContentType,keyboardType,multiline=false}) => {
     return (
         <View style={styles.field}>
             <Text style={styles.label}>{label}</Text>
@@ -31,6 +31,8 @@ const FormInput = ({ label, placeholder, useState, valueUseState, secureTextEntr
                 textContentType={textContentType}
                 secureTextEntry={secureTextEntry}
                 keyboardType={keyboardType}
+                multiline={multiline}
+                numberOfLines={multiline ? 4:1}
             />
         </View>
     );

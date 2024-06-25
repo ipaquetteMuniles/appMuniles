@@ -7,13 +7,14 @@
 ////////////////////////////////////////////////
 //Bibliothèques
 ////////////////////////////////////////////////
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, Picker } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase/fire';
 import { doc, getDoc } from 'firebase/firestore';
 import CsvDownloadButton from 'react-json-to-csv'
+import RadioGroup from 'react-native-radio-buttons-group';
 
 ////////////////////////////////////////////////
 //Composants
@@ -30,16 +31,33 @@ const PropaneConsommationForm = ({ navigation, route }) => {
 
     const [numProduit, setNumProduit] = useState('');
     const [date, setDate] = useState(new Date());
+    const [nomsite, setNomsite] = useState('');
+    const [description,setDescription] = useState('')//falcultatif
+    const [quantite,setQuantite] = useState('')
+    const [prixTotal, setPrixTotal] = useState('');
+    const [selectedQt, setselectedQt] = useState();
+
     const [textModal, setTextModal] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
-    //drodownlist
-    const [nomsite, setNomsite] = useState('');
 
     const [dataPropane, setDataPropane] = useState([])
 
+    const radioButtons = useMemo(() => ([
+        {
+            id: '1',
+            label: 'Livres',
+            value: 'lbs'
+        },
+        {
+            id: '2',
+            label: 'Litres',
+            value: 'l'
+        }
+    ]), []);
+
     const submit = async () => {
 
-        if (!numProduit || !nomsite) {
+        if (!numProduit || !nomsite || !quantite || !prixTotal || !selectedQt) {
             setTextModal('Assurez-vous de remplir tous les champs du formulaire.');
             setModalVisible(true);
         } else {
@@ -47,7 +65,12 @@ const PropaneConsommationForm = ({ navigation, route }) => {
 
             await addDoc(collection(db, tableName), {
                 date: date,
-                numProduit: numProduit
+                numProduit: numProduit,
+                nomsite:nomsite,
+                description:description,
+                quantite:quantite,
+                selectedQt: selectedQt == 1 ? 'livres':'litres',
+                prixTotal:prixTotal
             })
                 .then(() => {
                     //Annoncer que les données ont été submit
@@ -58,10 +81,16 @@ const PropaneConsommationForm = ({ navigation, route }) => {
                     setDate(new Date())
                     setNomsite('')
                     setNumProduit('')
+                    setDescription('')
+                    setQuantite('')
+                    setPrixTotal('')
+
+                    //reset les data
                     setDataPropane([])
                 })
                 .catch((err) => {
-                    setErreur('Erreur interne : Contacter iohann');
+                    setModalVisible(true)
+                    setTextModal('Erreur interne : Contacter iohann');
                     console.log(err);
                 });
         }
@@ -91,7 +120,7 @@ const PropaneConsommationForm = ({ navigation, route }) => {
                     array.push(data.data())
                 })
             })
-
+        console.log('conco', array)
         setDataPropane(array)
     }
 
@@ -131,8 +160,8 @@ const PropaneConsommationForm = ({ navigation, route }) => {
                     {/* Numéro de produit */}
                     <View style={styles.field}>
                         <FormInput
-                            label={'Numéro de produit'}
-                            placeholder={'# ...'}
+                            label={'Référence'}
+                            placeholder={'Référence...'}
                             useState={setNumProduit}
                             valueUseState={numProduit}
                             textContentType={'none'}
@@ -154,6 +183,50 @@ const PropaneConsommationForm = ({ navigation, route }) => {
                         </Picker>
                     </View>
 
+                    {/* Quantité */}
+                    <View style={styles.field}>
+                        {/* sélection livre ou lbs */}
+                        <RadioGroup 
+                            radioButtons={radioButtons} 
+                            onPress={setselectedQt}
+                            selectedId={selectedQt}
+                            labelStyle={{color:'white',fontWeight:'bold',fontSize:25}}
+                            containerStyle={{flexDirection:'row',flex:2}}
+                        
+                        />
+                        <FormInput
+                            label={`Quantité en ${selectedQt == 1 ? 'livres':'litres'}`}
+                            placeholder={"Qt"}
+                            useState={setQuantite}
+                            valueUseState={quantite}
+                            textContentType={'number'}
+                            keyboardType={'numeric'}
+                        />
+                    </View>
+
+                    {/* Montant après taxe, total */}
+                    <View style={styles.field}>
+                        <FormInput
+                            label={"Montant total"}
+                            placeholder={"après taxe ... $"}
+                            useState={setPrixTotal}
+                            valueUseState={prixTotal}
+                            textContentType={'none'}
+                        />
+                    </View>
+
+
+                    {/* Description optionnelle */}
+                    <View style={styles.field}>
+                        <FormInput
+                            label={"Description"}
+                            placeholder={"Optionnel ..."}
+                            useState={setDescription}
+                            valueUseState={description}
+                            textContentType={'none'}
+                            multiline={true}
+                        />
+                    </View>
 
                 </View>
 
