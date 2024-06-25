@@ -21,7 +21,7 @@ const FormButton = ({onPress,buttonTitle,backgroundColor='white',color='#060270'
   return (
    <View style={{margin:10}}>
         <TouchableOpacity onPress={onPress}
-            style={{backgroundColor:backgroundColor,borderRadius:60}}
+            style={{backgroundColor:backgroundColor,borderRadius:60,borderColor:'gray',borderWidth:1}}
         >
             <View>
                 <Text style={{color:color,padding:10}}>{buttonTitle}</Text>

@@ -46,12 +46,11 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 20,
-        color: 'white',
+        color:'white',
         marginBottom: 10,
     },
     input: {
         backgroundColor: '#0E1442',
-        color: 'white',
         borderColor: 'gray',
         borderWidth: 1,
         borderRadius: 10,

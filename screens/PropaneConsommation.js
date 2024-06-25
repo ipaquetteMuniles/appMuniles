@@ -249,7 +249,6 @@ const PropaneConsommationForm = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#060270',
         padding: 10,
     },
     formContainer: {

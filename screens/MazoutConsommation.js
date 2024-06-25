@@ -249,7 +249,6 @@ const MazoutConsommationForm = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#060270',
         padding: 10,
     },
     formContainer: {
@@ -265,6 +264,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     field: {
+        color:'white',
         marginBottom: 20,
     },
     label: {

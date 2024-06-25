@@ -159,7 +159,7 @@ const Administration = ({ navigation, route }) => {
                 <FormButton 
                     buttonTitle={'Arreter'}
                     backgroundColor='red'
-                    onPress={()=>setLoading(false)}
+                    onPress={logout}
                 />
             </View>
         )
@@ -171,7 +171,7 @@ const Administration = ({ navigation, route }) => {
 
             {
                 !isConnect ? (
-                    <View>
+                    <View style={styles.formContainer}>
                         <Text style={styles.title}>Entrez vos informations de connexion pour la plateforme :
                             <Text onPress={() => open('https://mytotalconnectcomfort.com/portal/')} style={{ color: 'blue' }}>
                                 https://mytotalconnectcomfort.com/portal/
@@ -194,14 +194,17 @@ const Administration = ({ navigation, route }) => {
                             multiline={false}
                         />
 
-                        <FormButton
-                            buttonTitle={'Se connecter au contrôle'}
-                            onPress={connect}
-                        />
+                        <View style={styles.buttonContainer}>
+
+                            <FormButton
+                                buttonTitle={'Se connecter au contrôle'}
+                                onPress={connect}
+                            />
+                        </View>
 
                     </View>
                 ) : (
-                    <View>
+                    <View style={styles.formContainer}>
                         <Text style={styles.title}>Connecté en tant que {userPortal}</Text>
                         <Text style={styles.label}>Veuillez choisir la zone que vous souhaitez exploiter</Text>
                         {(!choix && zones) && (
@@ -270,18 +273,22 @@ export default Administration;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#060270',
         padding: 10,
     },
     title: {
         fontSize: 25,
-        color: 'white',
         fontWeight: 'bold',
+        marginBottom: 20,
+        color:'white'
+    },
+    formContainer: {
+        backgroundColor: '#0E1442',
+        borderRadius: 10,
+        padding: 20,
         marginBottom: 20,
     },
     label: {
         fontSize: 20,
-        color: 'white',
         marginBottom: 10,
     },
     buttonContainer: {
