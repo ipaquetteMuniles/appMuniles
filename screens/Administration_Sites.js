@@ -14,6 +14,7 @@ import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity
 import axios from 'axios';
 import { Link } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
+import Checkbox from 'expo-checkbox';
 
 ////////////////////////////////////////////////
 //Composants
@@ -34,35 +35,44 @@ const Administration = ({ navigation, route }) => {
 
     const [isConnect, setIsConnect] = useState(false)
 
-    const [frequency, setFrequency] = useState('');
-    const [frequencyType, setFrequencyType] = useState('minutes'); // 'minutes', 'hours', 'days'
+    const [frequency, setFrequency] = useState();
+    const [selectedFrequencyType, setSelectedFrequencyType] = useState('');
+    const frequencyTypes = ['minutes', 'hours', 'days']
     const [loading, setLoading] = useState(false)
     const [isCollecting, setIsCollecting] = useState(false)
     const [choix, setChoix] = useState()
     const [zones, setZones] = useState([])
     const [collectedData, setCollectedData] = useState([]);
 
-    const ipAdress = '127.0.0.1'
-
+    const local = 'http://127.0.0.1:5000'
+    const ipAdress = 'https://iohann.pythonanywhere.com'
     const startCollection = async () => {
 
-        if(choix == null)
-        {
+        if (choix == null) {
             alert('Veuillez choisir une zone')
+            return
+        }
+        if (frequency == null)
+        {
+            alert('Veuillez indiquer un chiffre qui indique la fréquence de la récolte')
             return
         }
         try {
             setLoading(true);
-            const response = await axios.post(`http://${ipAdress}:5000/start`, {
+            console.log('ici')
+            const response = await axios.post(`${local}/start`, {
                 choix: parseInt(choix),
                 frequency: parseInt(frequency),
-                frequency_type: frequencyType,
+                frequency_type: selectedFrequencyType,
             });
+
+            console.log(response)
 
             if (response.statusText == 'OK') {
                 setIsCollecting(true)
 
-                const eventSource = new EventSource(`http://${ipAdress}:5000/events`);
+                const eventSource = new EventSource(`${local}/events`);
+
                 eventSource.onerror = (error) => {
                     setIsCollecting(false)
                     setLoading(false)
@@ -70,10 +80,11 @@ const Administration = ({ navigation, route }) => {
                     console.error(error);
 
                 }
-                eventSource.onmessage = (event) => {
-                    setLoading(false)
+                setLoading(false)
 
+                eventSource.onmessage = (event) => {
                     const newData = event.data;
+                    console.log(newData);
                     setCollectedData((prevData) => [...prevData, newData]);
                 };
             }
@@ -96,10 +107,17 @@ const Administration = ({ navigation, route }) => {
     const stopCollection = async () => {
         try {
             setLoading(true)
-            const response = await axios.post(`http://${ipAdress}:5000/stop`);
+            const eventSource = new EventSource(`${local}/events`);
+            eventSource.close()
+
+            const response = await axios.post(`${local}/stop`);
+
+            if (response.statusText == 'OK') {
+                alert('Success', 'Data collection stopped');
+            }
+
             setLoading(false)
             setIsCollecting(false)
-            alert('Success', 'Data collection stopped');
         } catch (error) {
             console.error(error);
             setLoading(false)
@@ -109,8 +127,14 @@ const Administration = ({ navigation, route }) => {
 
     const logout = async () => {
         try {
+            //si l'utilisateur n'est pas connecter
+            if(!userPortal)
+            {
+                setLoading(false)
+                return
+            }
             setLoading(true)
-            const response = await axios.post(`http://${ipAdress}:5000/logout`)
+            const response = await axios.post(`${local}/logout`)
 
             if (response.statusText == 'OK') {
                 setLoading(false)
@@ -133,7 +157,7 @@ const Administration = ({ navigation, route }) => {
     const connect = async () => {
         try {
             setLoading(true)
-            const response = await axios.post(`http://${ipAdress}:5000/connect`, {
+            const response = await axios.post(`${local}/connect`, {
                 email,
                 password,
             });
@@ -207,14 +231,13 @@ const Administration = ({ navigation, route }) => {
                 ) : (
                     <View style={styles.formContainer}>
                         <Text style={styles.title}>Connecté en tant que {userPortal}</Text>
-                        <Text style={styles.label}>Veuillez choisir la zone que vous souhaitez exploiter</Text>
 
                         {
                             (!isCollecting ? (
                                 <View>
                                     {(zones) && (
                                         zones.map((item, index) => (
-                                            <View>
+                                            <View id={index}>
                                                 <TouchableOpacity onPress={() => setChoix(index)}>
                                                     <View style={{ backgroundColor: 'white', margin: 10 }}>
                                                         <Text style={styles.label}>{index} {item.id} - {item.name}</Text>
@@ -231,13 +254,24 @@ const Administration = ({ navigation, route }) => {
                                         placeholder={'1 min ? 2 min ...'}
                                     />
 
-                                    <FormInput
-                                        valueUseState={frequencyType}
-                                        useState={setFrequencyType}
-                                        textContentType="numeric"
-                                        label={'Type de fréquence'}
-                                        placeholder={'tous les min,heure,jours ?...'}
-                                    />
+
+                                    {frequencyTypes.map((item, index) => (
+                                        <View key={item}>
+                                            <TouchableOpacity onPress={() => setSelectedFrequencyType(item)}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center',backgroundColor:'white' }}>
+                                                       <Checkbox
+                                                style={styles.checkbox}
+                                                value={selectedFrequencyType === item}
+                                                color={'#4630EB'}
+                                            />                                            
+                                            <Text>{index} - {item}</Text>
+
+                                                </View>
+                                            </TouchableOpacity>
+                                         
+                                        </View>
+                                    ))}
+
                                     {choix != null && (
                                         <View style={{ backgroundColor: 'white', margin: 10 }}>
                                             <Text style={styles.label}>{choix} {zones[choix].id} - {zones[choix].name}</Text>
@@ -249,15 +283,17 @@ const Administration = ({ navigation, route }) => {
                                     </View>
                                 </View>
                             ) : (
-                                <View>
+                                <ScrollView>
                                     <Text style={styles.title}>Données récoltées : {collectedData.length}</Text>
+                                    {collectedData.length == 0 && (<Text style={styles.title}>En recherche ...</Text>)}
                                     {collectedData.length > 0 && (
                                         <View>
-                                            <Text style={styles.label}>Collected Data:</Text>
-                                            <Text style={styles.label}>zone_id,zone_name,timestamp,indoor_temperature,outdoor_temperature,displayUnits,indoor_humidity,outdoor_humidity,heat_setpoint,cool_setpoint,fan_status</Text>
+                                            <View style={{ backgroundColor: 'white', margin: 10 }}>
+                                                <Text style={styles.label}>zone_id,zone_name,timestamp,indoor_temperature,outdoor_temperature,displayUnits,indoor_humidity,outdoor_humidity,heat_setpoint,cool_setpoint,fan_status</Text>
+                                            </View>
                                             {collectedData.map((data, index) => (
-                                                <View style={{backgroundColor:'white'}}>
-                                                    <Text  style={styles.label} key={index}>{data}</Text>
+                                                <View style={{ backgroundColor: 'white', margin: 10 }} id={index}>
+                                                    <Text style={styles.label} key={index}>{index + 1}. - {data}</Text>
                                                 </View>
                                             ))}
                                         </View>
@@ -265,7 +301,7 @@ const Administration = ({ navigation, route }) => {
                                     <View style={styles.buttonContainer}>
                                         <FormButton buttonTitle="Arreter la collecte" onPress={stopCollection} />
                                     </View>
-                                </View>
+                                </ScrollView>
                             ))
                         }
 
@@ -302,5 +338,8 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         alignItems: 'center',
+    },
+    checkbox: {
+        margin: 8,
     },
 });
