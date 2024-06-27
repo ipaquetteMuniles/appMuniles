@@ -13,7 +13,7 @@ un serveur python, qui lui se connectera a un thermostat intelligent */
 import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { Link } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useRef } from 'react';
 import Checkbox from 'expo-checkbox';
 
 ////////////////////////////////////////////////
@@ -35,8 +35,8 @@ const Administration = ({ navigation, route }) => {
 
     const [isConnect, setIsConnect] = useState(false)
 
-    const [frequency, setFrequency] = useState();
-    const [selectedFrequencyType, setSelectedFrequencyType] = useState('');
+    const [frequency, setFrequency] = useState(1);
+    const [selectedFrequencyType, setSelectedFrequencyType] = useState('minutes');
     const frequencyTypes = ['minutes', 'hours', 'days']
     const [loading, setLoading] = useState(false)
     const [isCollecting, setIsCollecting] = useState(false)
@@ -46,6 +46,9 @@ const Administration = ({ navigation, route }) => {
 
     const local = 'http://127.0.0.1:5000'
     const ipAdress = 'https://iohann.pythonanywhere.com'
+
+    const eventSourceRef = useRef(null);
+
     const startCollection = async () => {
 
         if (choix == null) {
@@ -59,30 +62,26 @@ const Administration = ({ navigation, route }) => {
         }
         try {
             setLoading(true);
-            console.log('ici')
             const response = await axios.post(`${local}/start`, {
                 choix: parseInt(choix),
                 frequency: parseInt(frequency),
                 frequency_type: selectedFrequencyType,
             });
 
-            console.log(response)
-
             if (response.statusText == 'OK') {
                 setIsCollecting(true)
 
-                const eventSource = new EventSource(`${local}/events`);
+                eventSourceRef.current = new EventSource(`${local}/events`);
 
-                eventSource.onerror = (error) => {
+                eventSourceRef.current.onerror = (error) => {
                     setIsCollecting(false)
                     setLoading(false)
-                    alert('Error', 'Ereur lors de l obtention des donnes...');
+                    alert('Erreur lors de l\'obtention des données');
                     console.error(error);
-
                 }
                 setLoading(false)
 
-                eventSource.onmessage = (event) => {
+                eventSourceRef.current.onmessage = (event) => {
                     const newData = event.data;
                     console.log(newData);
                     setCollectedData((prevData) => [...prevData, newData]);
@@ -107,13 +106,15 @@ const Administration = ({ navigation, route }) => {
     const stopCollection = async () => {
         try {
             setLoading(true)
-            const eventSource = new EventSource(`${local}/events`);
-            eventSource.close()
 
             const response = await axios.post(`${local}/stop`);
 
             if (response.statusText == 'OK') {
-                alert('Success', 'Data collection stopped');
+                if (eventSourceRef.current) {
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                }
+                alert('Success,Data collection stopped');
             }
 
             setLoading(false)
@@ -240,7 +241,7 @@ const Administration = ({ navigation, route }) => {
                                             <View id={index}>
                                                 <TouchableOpacity onPress={() => setChoix(index)}>
                                                     <View style={{ backgroundColor: 'white', margin: 10 }}>
-                                                        <Text style={styles.label}>{index} {item.id} - {item.name}</Text>
+                                                        <Text style={styles.label}>{item.id} - {item.name}</Text>
                                                     </View>
                                                 </TouchableOpacity>
                                             </View>
@@ -259,12 +260,12 @@ const Administration = ({ navigation, route }) => {
                                         <View key={item}>
                                             <TouchableOpacity onPress={() => setSelectedFrequencyType(item)}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center',backgroundColor:'white' }}>
-                                                       <Checkbox
-                                                style={styles.checkbox}
-                                                value={selectedFrequencyType === item}
-                                                color={'#4630EB'}
-                                            />                                            
-                                            <Text>{index} - {item}</Text>
+                                                    <Checkbox
+                                                        style={styles.checkbox}
+                                                        value={selectedFrequencyType === item}
+                                                        color={'#4630EB'}
+                                                    />                                            
+                                                    <Text>{index+1} - {item}</Text>
 
                                                 </View>
                                             </TouchableOpacity>
