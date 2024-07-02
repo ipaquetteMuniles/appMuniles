@@ -1,346 +1,324 @@
-////////////////////////////////////////////////
-// Municipalité des îles-de-la-Madeleine
-// Auteur :Iohann Paquette
+//////////////////////////////////////////////
+// Municipalité des Îles-de-la-Madeleine
+// Auteur : Iohann Paquette
 // Date : 2024-05-07
-/* Objectif: Pouvoir controller les différents sites des îles de
-la madeleine grâce a une interface web. En plus, nous connections cette plateforme a
-un serveur python, qui lui se connectera a un thermostat intelligent */
+/* Objectif: Pouvoir contrôler les différents sites des Îles-de-la-Madeleine
+grâce à une interface web. De plus, nous connectons cette plateforme à
+un serveur Python, qui lui se connectera à un thermostat intelligent */
 ////////////////////////////////////////////////
 
 ////////////////////////////////////////////////
-//Bibliothèques
+// Bibliothèques
 ////////////////////////////////////////////////
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import axios from 'axios';
-import { Link } from '@react-navigation/native';
-import { useEffect, useState,useRef } from 'react';
-import Checkbox from 'expo-checkbox';
+import { ref, onValue } from 'firebase/database';
+import { Calendar } from 'react-native-calendars';
+import CsvDownloadButton from 'react-json-to-csv';
+import moment from 'moment'; // Importation de moment.js
+import { Feather } from "@expo/vector-icons";
 
 ////////////////////////////////////////////////
-//Composants
+// Components
 ////////////////////////////////////////////////
 import Header from '../components/header';
-import { auth } from '../firebase/fire';
-import FormInput from '../components/FormInput';
 import FormButton from '../components/FormButton';
-////////////////////////////////////////////////
-// App
-////////////////////////////////////////////////
+import Popup from '../components/Popup';
+import { database } from '../firebase/fire';
+
 const Administration = ({ navigation, route }) => {
-
-    //Constantes
-    const [userPortal, setUserPortal] = useState()
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const [isConnect, setIsConnect] = useState(false)
-
-    const [frequency, setFrequency] = useState(1);
-    const [selectedFrequencyType, setSelectedFrequencyType] = useState('minutes');
-    const frequencyTypes = ['minutes', 'hours', 'days']
-    const [loading, setLoading] = useState(false)
-    const [isCollecting, setIsCollecting] = useState(false)
-    const [choix, setChoix] = useState()
-    const [zones, setZones] = useState([])
+    const [loading, setLoading] = useState(false);
     const [collectedData, setCollectedData] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [textModal, setTextModal] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [sortByAsc, setSortByAsc] = useState(true);
+    const [selectedZone, setSelectedZone] = useState('THERMOSTAT_2');
+    const [zones, setZones] = useState([]);
 
-    const local = 'http://127.0.0.1:5000'
-    const ipAdress = 'https://iohann.pythonanywhere.com'
+    const getFormattedDate = (date) => {
+        return moment(date).format('MM-DD-YYYY') + '-THERMOSTAT_DATA';
+    };
 
-    const eventSourceRef = useRef(null);
-
-    const startCollection = async () => {
-
-        if (choix == null) {
-            alert('Veuillez choisir une zone')
-            return
-        }
-        if (frequency == null)
-        {
-            alert('Veuillez indiquer un chiffre qui indique la fréquence de la récolte')
-            return
-        }
+    const fetchData = () => {
         try {
             setLoading(true);
-            const response = await axios.post(`${local}/start`, {
-                choix: parseInt(choix),
-                frequency: parseInt(frequency),
-                frequency_type: selectedFrequencyType,
+            setCollectedData([]);
+            setSelectedZone(null);
+            // Aller chercher les différentes zones
+            const zoneRef = ref(database, '/');
+
+            onValue(zoneRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const uniqueZones = new Set();
+                    Object.keys(data).forEach((key) => {
+                        Object.keys(data[key]).forEach((zoneName, i) => {
+                            uniqueZones.add(zoneName);
+                        });
+                    });
+                    // Mettre à jour les zones avec les noms uniques
+                    setZones([...uniqueZones]);
+            
+                    // Sélectionner la première zone par défaut
+                    if (uniqueZones.size > 0) {
+                        setSelectedZone(uniqueZones.values().next().value);
+                    }
+                }
+
             });
 
-            if (response.statusText == 'OK') {
-                setIsCollecting(true)
+            // Aller chercher les data des zones
+            console.log(selectedZone);
+            const formattedDate = getFormattedDate(selectedDate);
+            const dataRef = ref(database, `9159953/${selectedZone}/${formattedDate}`);
 
-                eventSourceRef.current = new EventSource(`${local}/events`);
+            onValue(dataRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const formattedData = Object.values(data);
+                    setCollectedData(formattedData);
 
-                eventSourceRef.current.onerror = (error) => {
-                    setIsCollecting(false)
-                    setLoading(false)
-                    alert('Erreur lors de l\'obtention des données');
-                    console.error(error);
                 }
-                setLoading(false)
-
-                eventSourceRef.current.onmessage = (event) => {
-                    const newData = event.data;
-                    console.log(newData);
-                    setCollectedData((prevData) => [...prevData, newData]);
-                };
-            }
-            else {
-                setLoading(false);
-                alert('Probleme en partant le serveur')
-                return
-            }
-
-
-        } catch (error) {
-            console.error(error);
-            setIsCollecting(false)
-            setLoading(false)
-            alert('Error', 'Failed to start data collection');
-
+            });
+        } catch (err) {
+            console.log(err);
+            setTextModal("Erreur lors de la requête des données. Réessayez plus tard.");
+            setModalVisible(true);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const stopCollection = async () => {
-        try {
-            setLoading(true)
-
-            const response = await axios.post(`${local}/stop`);
-
-            if (response.statusText == 'OK') {
-                if (eventSourceRef.current) {
-                    eventSourceRef.current.close();
-                    eventSourceRef.current = null;
-                }
-                alert('Success,Data collection stopped');
-            }
-
-            setLoading(false)
-            setIsCollecting(false)
-        } catch (error) {
-            console.error(error);
-            setLoading(false)
-            alert('Error', 'Failed to stop data collection');
-        }
+    const sortByDate = () => {
+        const sortedData = [...collectedData].sort((a, b) => {
+            const dateA = moment(a.timestamp);
+            const dateB = moment(b.timestamp);
+            return sortByAsc ? dateA - dateB : dateB - dateA;
+        });
+        setCollectedData(sortedData);
+        setSortByAsc(!sortByAsc); // Inverser l'ordre de tri après chaque clic
     };
 
-    const logout = async () => {
-        try {
-            //si l'utilisateur n'est pas connecter
-            if(!userPortal)
-            {
-                setLoading(false)
-                return
-            }
-            setLoading(true)
-            const response = await axios.post(`${local}/logout`)
-
-            if (response.statusText == 'OK') {
-                setLoading(false)
-                setIsCollecting(false)
-                setIsConnect(false)
-            }
-            else {
-                setLoading(false)
-                console.log(error)
-                alert(`Erreur lors de la deconnexion ${response.status}.. Aller sur le portail si cela est urgent`)
-            }
-        }
-        catch (error) {
-            setLoading(false)
-            console.log(error)
-            alert('Erreur lors de la deconnexion.. Aller sur le portail si cela est urgent')
-        }
-    }
-
-    const connect = async () => {
-        try {
-            setLoading(true)
-            const response = await axios.post(`${local}/connect`, {
-                email,
-                password,
-            });
-
-            if (response.statusText == 'OK') {
-                const z = response.data.zones
-                setZones(z)
-                setIsConnect(true)
-                setUserPortal(response.data.user)
-            }
-            setLoading(false)
-        }
-        catch (error) {
-            console.error(error);
-            setLoading(false)
-            alert('Error', 'Failed to connect, retry later...');
-        }
-    }
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     if (loading) {
         return (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator animating={true} size={'large'} />
-                <FormButton
-                    buttonTitle={'Arreter'}
-                    backgroundColor='red'
-                    onPress={logout}
-                />
             </View>
-        )
+        );
     }
 
     return (
         <View style={styles.container}>
             <Header navigation={navigation} nomPage={'Administration'} />
 
-            {
-                !isConnect ? (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.title}>Entrez vos informations de connexion pour la plateforme :
-                            <Text onPress={() => open('https://mytotalconnectcomfort.com/portal/')} style={{ color: 'blue' }}>
-                                https://mytotalconnectcomfort.com/portal/
-                            </Text>
+            <ScrollView style={styles.formContainer}>
+                    <View style={{ backgroundColor: 'white' }}>
+                        <Text style={styles.headerText}>
+                            Veuillez choisir une zone parmi les suivantes
                         </Text>
-                        <FormInput
-                            label={'Courriel'}
-                            placeholder={'name@muniles.ca'}
-                            useState={setEmail}
-                            valueUseState={email}
-                            textContentType='emailAddress'
-                        />
-                        <FormInput
-                            label={'Mot de passe'}
-                            placeholder={'###'}
-                            useState={setPassword}
-                            valueUseState={password}
-                            textContentType='password'
-                            secureTextEntry={true}
-                            multiline={false}
-                        />
+                        {zones.length > 0 && (
+                            <View>
 
-                        <View style={styles.buttonContainer}>
+                                {zones.map((zone, index) => (
+                                    <TouchableOpacity key={index} onPress={() => setSelectedZone(zone)}>
+                                        <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
+                                            <Text style={styles.cellText}>
+                                                {index + 1} - {zone}
+                                            </Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
+               
 
-                            <FormButton
-                                buttonTitle={'Se connecter au contrôle'}
-                                onPress={connect}
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    {showCalendar && (
+                        <View>
+                            <Calendar
+                                onDayPress={(day) => setSelectedDate(day.dateString)}
+                                markedDates={{
+                                    [selectedDate]: { selected: true, disableTouchEvent: true, selectedDotColor: 'blue' },
+                                }}
                             />
+                            <Text style={styles.title}>{selectedDate.toString()}</Text>
+                        </View>
+                    )}
+                    <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
+                        <FormButton
+                            buttonTitle={'Confirmer'}
+                            onPress={fetchData}
+                        />
+                        <FormButton
+                            onPress={() => setShowCalendar(!showCalendar)}
+                            buttonTitle={showCalendar ? 'Annuler' : 'Sélectionner une autre date'}
+                        />
+                    </View>
+                </View>
+
+                {collectedData.length === 0 && (<Text style={styles.title}>En recherche ...</Text>)}
+                {collectedData.length > 0 && (
+                    <View>
+                        <View style={styles.buttonContainer}>
+                            <CsvDownloadButton data={collectedData} filename={`Thermostat_${new Date().toLocaleDateString()}`} />
                         </View>
 
-                    </View>
-                ) : (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.title}>Connecté en tant que {userPortal}</Text>
+                        <View style={styles.tableContainer}>
+                            <View style={styles.tableHeader}>
+                                <TouchableOpacity>
+                                    <Text style={styles.headerText}>Device_id</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <TouchableOpacity onPress={sortByDate}>
+                                    <Text style={styles.headerText}>
+                                        Date
+                                        <Feather
+                                            name={sortByAsc ? 'arrow-down' : 'arrow-up'}
+                                            size={25}
+                                        />
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Zone</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Temp. intérieure (°C)</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Temp. extérieure (°C)</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Hum. intérieure</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Hum. extérieure</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Point de consigne chaud</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Point de consigne froid</Text>
+                            </View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.headerText}>Ventilateur en fonctionnement</Text>
+                            </View>
+                        </View>
 
-                        {
-                            (!isCollecting ? (
-                                <View>
-                                    {(zones) && (
-                                        zones.map((item, index) => (
-                                            <View id={index}>
-                                                <TouchableOpacity onPress={() => setChoix(index)}>
-                                                    <View style={{ backgroundColor: 'white', margin: 10 }}>
-                                                        <Text style={styles.label}>{item.id} - {item.name}</Text>
-                                                    </View>
-                                                </TouchableOpacity>
-                                            </View>
-                                        ))
-                                    )}
-                                    <FormInput
-                                        valueUseState={frequency}
-                                        useState={setFrequency}
-                                        textContentType="numeric"
-                                        label={'Fréquence de récolte'}
-                                        placeholder={'1 min ? 2 min ...'}
-                                    />
-
-
-                                    {frequencyTypes.map((item, index) => (
-                                        <View key={item}>
-                                            <TouchableOpacity onPress={() => setSelectedFrequencyType(item)}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center',backgroundColor:'white' }}>
-                                                    <Checkbox
-                                                        style={styles.checkbox}
-                                                        value={selectedFrequencyType === item}
-                                                        color={'#4630EB'}
-                                                    />                                            
-                                                    <Text>{index+1} - {item}</Text>
-
-                                                </View>
-                                            </TouchableOpacity>
-                                         
-                                        </View>
-                                    ))}
-
-                                    {choix != null && (
-                                        <View style={{ backgroundColor: 'white', margin: 10 }}>
-                                            <Text style={styles.label}>{choix} {zones[choix].id} - {zones[choix].name}</Text>
-                                        </View>
-                                    )}
-                                    <View style={styles.buttonContainer}>
-                                        <FormButton buttonTitle="Commencer la collecte des données" onPress={startCollection} />
-                                        <FormButton buttonTitle="Deconnexion" onPress={logout} />
-                                    </View>
+                        {collectedData.map((value, index) => (
+                            <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair} key={index}>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.device_id}</Text>
                                 </View>
-                            ) : (
-                                <ScrollView>
-                                    <Text style={styles.title}>Données récoltées : {collectedData.length}</Text>
-                                    {collectedData.length == 0 && (<Text style={styles.title}>En recherche ...</Text>)}
-                                    {collectedData.length > 0 && (
-                                        <View>
-                                            <View style={{ backgroundColor: 'white', margin: 10 }}>
-                                                <Text style={styles.label}>zone_id,zone_name,timestamp,indoor_temperature,outdoor_temperature,displayUnits,indoor_humidity,outdoor_humidity,heat_setpoint,cool_setpoint,fan_status</Text>
-                                            </View>
-                                            {collectedData.map((data, index) => (
-                                                <View style={{ backgroundColor: 'white', margin: 10 }} id={index}>
-                                                    <Text style={styles.label} key={index}>{index + 1}. - {data}</Text>
-                                                </View>
-                                            ))}
-                                        </View>
-                                    )}
-                                    <View style={styles.buttonContainer}>
-                                        <FormButton buttonTitle="Arreter la collecte" onPress={stopCollection} />
-                                    </View>
-                                </ScrollView>
-                            ))
-                        }
-
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>
+                                        {moment(value.timestamp).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.zone_name}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.display_temperature} °C</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.outdoor_temperature} °C</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.indoor_humidity}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.outdoor_humidity}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.heat_setpoint}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.cool_setpoint}</Text>
+                                </View>
+                                <View style={styles.dataCell}>
+                                    <Text style={styles.cellText}>{value.fan_is_running ? 'Oui' : 'Non'}</Text>
+                                </View>
+                            </View>
+                        ))}
                     </View>
-                )
-            }
+                )}
+
+                <Popup
+                    text={textModal}
+                    visible={modalVisible}
+                    onClose={() => setModalVisible(false)}
+                />
+            </ScrollView>
         </View>
     );
-
-}
-
-export default Administration;
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
-    },
-    title: {
-        fontSize: 25,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: 'white'
-    },
-    formContainer: {
-        backgroundColor: '#0E1442',
-        borderRadius: 10,
-        padding: 20,
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 20,
-        marginBottom: 10,
-    },
-    buttonContainer: {
+        backgroundColor: '#E3E6E8',
         alignItems: 'center',
     },
-    checkbox: {
-        margin: 8,
+    formContainer: {
+        width: '95%',
+    },
+    tableContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        backgroundColor: 'white',
+        alignItems: 'center',
+    },
+    dataRowPair: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        backgroundColor: '#F5F8FA',
+        alignItems: 'center',
+    },
+    dataRowImpair: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        backgroundColor: '#E8ECEE',
+        alignItems: 'center',
+    },
+    tableHeader: {
+        width: '10%',
+        borderRightWidth: 1,
+        borderRightColor: '#D7DADC',
+        padding: 5,
+    },
+    dataCell: {
+        width: '10%',
+        borderRightWidth: 1,
+        borderRightColor: '#D7DADC',
+        padding: 5,
+    },
+    headerText: {
+        fontWeight: 'bold',
+        color: 'black',
+    },
+    cellText: {
+        color: 'black',
+    },
+    title: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'black',
+        margin: 10,
+        textAlign: 'center',
+    },
+    buttonContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 10,
     },
 });
+
+export default Administration;

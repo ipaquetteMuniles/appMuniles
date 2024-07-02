@@ -120,7 +120,6 @@ const PropaneConsommationForm = ({ navigation, route }) => {
                     array.push(data.data())
                 })
             })
-        console.log('conco', array)
         setDataPropane(array)
     }
 
@@ -128,7 +127,7 @@ const PropaneConsommationForm = ({ navigation, route }) => {
         getUserInfo()
         getPropaneData()
     }, [])
-
+    
     return (
         <View style={styles.container}>
             <Header navigation={navigation} nomPage={'PropaneConsommationForm'} />

@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { getDatabase } from "firebase/database";
 
 const recaptchaKey = '6LdKUtwpAAAAAEXv1hArBYrM4y3haed6k82zlU2Y'
 
@@ -9,6 +10,7 @@ const recaptchaKey = '6LdKUtwpAAAAAEXv1hArBYrM4y3haed6k82zlU2Y'
 const firebaseConfig = {
   apiKey: "AIzaSyCO9B_wuPKcIRgewt9DCy0SgMwOm7IXoa4",
   authDomain: "appmuniles.firebaseapp.com",
+  databaseURL: "https://appmuniles-default-rtdb.firebaseio.com",
   projectId: "appmuniles",
   storageBucket: "appmuniles.appspot.com",
   messagingSenderId: "634140732676",
@@ -25,3 +27,4 @@ const appCheck = initializeAppCheck(app, {
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const database = getDatabase(app)

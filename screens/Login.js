@@ -60,31 +60,29 @@ const LoginScreen = ({ navigation, route }) => {
 
     return (
         <View style={styles.container}>
-            {/* logo */}
-            <Image
-                source={require('../assets/Logo_Iles_de_la_Madeleine.png')}
-                resizeMethod='contains'
-                style={{ width: 500, height: 100 }}
-            />
+           
             {/* courriel */}
-            <FormInput 
-                label={'Courriel'}
-                placeholder={'name@muniles.ca'}
-                useState={setCourriel}
-                valueUseState={courriel}
-                textContentType='emailAddress'
-            />
+            <View style={styles.formContainer}>
+                <FormInput 
+                    label={'Courriel'}
+                    placeholder={'name@muniles.ca'}
+                    useState={setCourriel}
+                    valueUseState={courriel}
+                    textContentType='emailAddress'
+                />
 
-            {/* field 2 - MDP */}
-            <FormInput 
-                label={'Mot de passe'}
-                placeholder={'###'}
-                useState={setMdp}
-                valueUseState={mdp}
-                textContentType='password'
-                secureTextEntry={true}
-                multiline={false}
-            />
+                {/* field 2 - MDP */}
+                <FormInput 
+                    label={'Mot de passe'}
+                    placeholder={'###'}
+                    useState={setMdp}
+                    valueUseState={mdp}
+                    textContentType='password'
+                    secureTextEntry={true}
+                    multiline={false}
+                />
+            </View>
+            
 
             {/* submit button */}
             <FormButton onPress={connect} buttonTitle={'Connexion'} />
@@ -114,5 +112,11 @@ const styles = StyleSheet.create({
         margin: 10,
         alignItems:'center',
         justifyContent:'center'
+    },
+    formContainer: {
+        backgroundColor: '#0E1442',
+        borderRadius: 10,
+        padding: 20,
+        marginBottom: 20,
     }
 });
