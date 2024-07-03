@@ -7,7 +7,7 @@ Le portail comprend différentes branches.
 
 ### Connexion au portail
 L'accès au portail se fait par votre adresse courriel de Muniles. Si vous avez un mot de passe, 
-c'est vos initiales et votre poste téléphonique. 
+c'est vos initiales et votre poste téléphonique.\n
 De la sorte MDP :'ip163'
 ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/0290177a-4cae-4cbc-99d5-54689d14aee9)
 
@@ -21,12 +21,29 @@ La base de données en temp réel se trouve sur l'onglet suivant : ![image](http
 
 ### Connexion au serveur
 https://www.pythonanywhere.com/user/Iohann/
-Avec les informations de connexion suivantes : 
+Avec les informations de connexion suivantes :\n
 Username : iohann
 MDP : ioio1212
 
 #### Control du serveur
 ici : [https://www.pythonanywhere.com/user/Iohann/consoles/34548177/](https://www.pythonanywhere.com/user/Iohann/files/home/Iohann/CollectData.py?edit)
+1. Partez le serveur grâce au bouton RUN : ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/853db649-68d7-43f1-b505-fea7d2cdee33)
+2. Entrez dans le terminal votre adresse courriel correspondante à votre compte au portail TCC : https://mytotalconnectcomfort.com/portal/
+     - Par défaut
+       ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/dc3deca6-397e-4fa0-b9fd-91864909bf2b)
+
+3. Choissisez la zone que vous souhaitez partir le serveur
+   ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/5220f874-dc20-46a4-801b-c9eff4496a70)
+
+4. Choissisez la recurrence des requêtes (à chaque 1 minute, 5 minutes, 1h ?)
+   ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/383348de-fa21-4755-b5af-74469aa139f4)
+
+5. Les données commencent à etre stockées dans la base de données FIREBASE
+   ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/36568b1d-7ff6-4ff2-952e-ff98433e8c9a)
+
+6. Entrez stop pour arreter le programme
+
+*Pour partir différent serveur pour différente zone, vous pouvez voir le lien suivant : https://github.com/ipaquetteMuniles/thermoServerMuniles/tree/main
 
 
 ## Description de la section : Administration
