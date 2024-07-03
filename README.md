@@ -1,9 +1,9 @@
 # appMuniles
 ## Description du portail
 Le portail comprend différentes branches.
-  1 - Formulaire Mazout ( Pour rentrer les informations d'une facture d'une livraison de Mazout)
-  2 - Formulaire Propane ( Pour rentrer les informations d'une facture d'une livraison de Propane)
-  3 - Administration ( Accèder aux donnée du chauffage du CGMR)
+  1.  Formulaire Mazout ( Pour rentrer les informations d'une facture d'une livraison de Mazout)
+  2.  Formulaire Propane ( Pour rentrer les informations d'une facture d'une livraison de Propane)
+  3.  Aministration ( Accèder aux donnée du chauffage du CGMR)
 
 ### Connexion au portail
 L'accès au portail se fait par votre adresse courriel de Muniles. Si vous avez un mot de passe, 
