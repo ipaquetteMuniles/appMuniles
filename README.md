@@ -7,7 +7,7 @@ Le portail comprend différentes branches.
 
 ### Connexion au portail
 L'accès au portail se fait par votre adresse courriel de Muniles. Si vous avez un mot de passe, 
-c'est vos initiales et votre poste téléphonique.\n
+c'est vos initiales et votre poste téléphonique.
 De la sorte MDP :'ip163'
 ![image](https://github.com/ipaquetteMuniles/appMuniles/assets/169171284/0290177a-4cae-4cbc-99d5-54689d14aee9)
 
@@ -21,7 +21,7 @@ La base de données en temp réel se trouve sur l'onglet suivant : ![image](http
 
 ### Connexion au serveur
 https://www.pythonanywhere.com/user/Iohann/
-Avec les informations de connexion suivantes :\n
+Avec les informations de connexion suivantes :
 Username : iohann
 MDP : ioio1212
 
