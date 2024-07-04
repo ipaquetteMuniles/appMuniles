@@ -172,9 +172,7 @@ const Administration = ({ navigation, route }) => {
 
                         <View style={styles.tableContainer}>
                             <View style={styles.tableHeader}>
-                                <TouchableOpacity>
-                                    <Text style={styles.headerText}>Device_id</Text>
-                                </TouchableOpacity>
+                                <Text style={styles.headerText}>Device_id</Text>
                             </View>
                             <View style={styles.tableHeader}>
                                 <TouchableOpacity onPress={sortByDate}>
@@ -197,10 +195,7 @@ const Administration = ({ navigation, route }) => {
                                 <Text style={styles.headerText}>Temp. extérieure (°C)</Text>
                             </View>
                             <View style={styles.tableHeader}>
-                                <Text style={styles.headerText}>Hum. intérieure</Text>
-                            </View>
-                            <View style={styles.tableHeader}>
-                                <Text style={styles.headerText}>Hum. extérieure</Text>
+                                <Text style={styles.headerText}>Hum. extérieure (%)</Text>
                             </View>
                             <View style={styles.tableHeader}>
                                 <Text style={styles.headerText}>Point de consigne chaud</Text>
@@ -226,13 +221,10 @@ const Administration = ({ navigation, route }) => {
                                     <Text style={styles.cellText}>{value.zone_name}</Text>
                                 </View>
                                 <View style={styles.dataCell}>
-                                    <Text style={styles.cellText}>{value.display_temperature} °C</Text>
+                                    <Text style={styles.cellText}>{value.display_temperature}</Text>
                                 </View>
                                 <View style={styles.dataCell}>
-                                    <Text style={styles.cellText}>{value.outdoor_temperature} °C</Text>
-                                </View>
-                                <View style={styles.dataCell}>
-                                    <Text style={styles.cellText}>{value.indoor_humidity}</Text>
+                                    <Text style={styles.cellText}>{value.outdoor_temperature}</Text>
                                 </View>
                                 <View style={styles.dataCell}>
                                     <Text style={styles.cellText}>{value.outdoor_humidity}</Text>
