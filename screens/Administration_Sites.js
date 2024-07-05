@@ -38,7 +38,7 @@ const Administration = ({ navigation, route }) => {
     const [zones, setZones] = useState([]);
 
     const getFormattedDate = (date) => {
-        return moment(date).format('MM-DD-YYYY') + '-THERMOSTAT_DATA';
+        return moment(date).format('YYYY-MM-DD') + '-THERMOSTAT_DATA';
     };
 
     const fetchData = () => {
@@ -60,7 +60,7 @@ const Administration = ({ navigation, route }) => {
                     });
                     // Mettre à jour les zones avec les noms uniques
                     setZones([...uniqueZones]);
-            
+
                     // Sélectionner la première zone par défaut
                     if (uniqueZones.size > 0) {
                         setSelectedZone(uniqueZones.values().next().value);
@@ -82,6 +82,7 @@ const Administration = ({ navigation, route }) => {
 
                 }
             });
+
         } catch (err) {
             console.log(err);
             setTextModal("Erreur lors de la requête des données. Réessayez plus tard.");
@@ -118,26 +119,26 @@ const Administration = ({ navigation, route }) => {
             <Header navigation={navigation} nomPage={'Administration'} />
 
             <ScrollView style={styles.formContainer}>
-                    <View style={{ backgroundColor: 'white' }}>
-                        <Text style={styles.headerText}>
-                            Veuillez choisir une zone parmi les suivantes
-                        </Text>
-                        {zones.length > 0 && (
-                            <View>
+                <View style={{ backgroundColor: 'white' }}>
+                    <Text style={styles.headerText}>
+                        Veuillez choisir une zone parmi les suivantes
+                    </Text>
+                    {zones.length > 0 && (
+                        <View>
 
-                                {zones.map((zone, index) => (
-                                    <TouchableOpacity key={index} onPress={() => setSelectedZone(zone)}>
-                                        <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
-                                            <Text style={styles.cellText}>
-                                                {index + 1} - {zone}
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
-                    </View>
-               
+                            {zones.map((zone, index) => (
+                                <TouchableOpacity key={index} onPress={() => setSelectedZone(zone)}>
+                                    <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
+                                        <Text style={styles.cellText}>
+                                            {index + 1} - {zone}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </View>
+
 
                 <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                     {showCalendar && (
