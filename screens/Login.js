@@ -10,7 +10,8 @@
 
 import { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, Image } from 'react-native';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {  setPersistence, signInWithEmailAndPassword, browserSessionPersistence } from "firebase/auth";
+
 import {auth} from '../firebase/fire'
 
 ////////////////////////////////////////////////
@@ -35,7 +36,10 @@ const LoginScreen = ({ navigation, route }) => {
     const [modalVisible, setModalVisible] = useState(false);
 
     const connect = () => {
-        signInWithEmailAndPassword(auth, courriel, mdp)
+
+        setPersistence(auth, browserSessionPersistence)
+        .then(() => {
+            return signInWithEmailAndPassword(auth, courriel, mdp)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
@@ -56,6 +60,13 @@ const LoginScreen = ({ navigation, route }) => {
                     setModalVisible(true)
                 }
             });
+        })
+        .catch((error) => {
+            // Handle Errors here.
+            const errorCode = error.code;
+            const errorMessage = error.message;
+        });
+        
     }
 
     return (

@@ -11,12 +11,13 @@ un serveur Python, qui lui se connectera à un thermostat intelligent */
 // Bibliothèques
 ////////////////////////////////////////////////
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { ref, onValue } from 'firebase/database';
 import { Calendar } from 'react-native-calendars';
 import CsvDownloadButton from 'react-json-to-csv';
 import moment from 'moment'; // Importation de moment.js
 import { Feather } from "@expo/vector-icons";
+import { LineChart } from 'react-native-chart-kit';
 
 ////////////////////////////////////////////////
 // Components
@@ -79,7 +80,7 @@ const Administration = ({ navigation, route }) => {
                 if (data) {
                     const formattedData = Object.values(data);
                     setCollectedData(formattedData);
-
+                    setSortByAsc(sortByAsc)
                 }
             });
 
@@ -167,20 +168,67 @@ const Administration = ({ navigation, route }) => {
                 {collectedData.length === 0 && (<Text style={styles.title}>En recherche ...</Text>)}
                 {collectedData.length > 0 && (
                     <View>
+
+                        <LineChart
+                            data={{
+                                labels: collectedData.map((value, index) => index % 5 === 0 ? moment(value.timestamp).format('HH:mm') : ''),
+                                datasets: [
+                                    {
+                                        data: collectedData.map(value => value.display_temperature),
+                                        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+                                        strokeWidth: 3
+                                    },
+                                    {
+                                        data: collectedData.map(value => value.outdoor_temperature),
+                                        color: (opacity = 1) => `rgba(34, 193, 195, ${opacity})`,
+                                        strokeWidth: 3
+                                    }
+                                ],
+                                legend: ['Temp. int.', 'Temp. ext.']
+                            }}
+                            width={Dimensions.get("window").width - 100}
+                            height={220}
+                            yAxisSuffix='°C'
+                            chartConfig={{
+                                backgroundColor: "#ffffff",
+                                backgroundGradientFrom: "#ffffff",
+                                backgroundGradientTo: "#e6f2ff",
+                                decimalPlaces: 1,
+                                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                                style: {
+                                    borderRadius: 16,
+                                },
+                                propsForDots: {
+                                    r: "6",
+                                    strokeWidth: "2",
+                                    stroke: "#e6f2ff"
+                                }
+                            }}
+                            bezier
+                            style={{
+                                marginVertical: 8,
+                                borderRadius: 16,
+                                alignSelf: 'center',
+                                justifyContent: 'center',
+                                padding: 10,
+                                margin: 20
+                            }}
+                        />
+
+
                         <View style={styles.buttonContainer}>
-                            <CsvDownloadButton data={collectedData} filename={`Thermostat_${new Date().toLocaleDateString()}`} />
+                            <CsvDownloadButton data={collectedData} filename={`Thermostat_${selectedDate}`} />
                         </View>
 
                         <View style={styles.tableContainer}>
-                            <View style={styles.tableHeader}>
-                                <Text style={styles.headerText}>Device_id</Text>
-                            </View>
+
                             <View style={styles.tableHeader}>
                                 <TouchableOpacity onPress={sortByDate}>
                                     <Text style={styles.headerText}>
                                         Date
                                         <Feather
-                                            name={sortByAsc ? 'arrow-down' : 'arrow-up'}
+                                            name={sortByAsc ? 'arrow-up':'arrow-down'}
                                             size={25}
                                         />
                                     </Text>
@@ -211,9 +259,6 @@ const Administration = ({ navigation, route }) => {
 
                         {collectedData.map((value, index) => (
                             <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair} key={index}>
-                                <View style={styles.dataCell}>
-                                    <Text style={styles.cellText}>{value.device_id}</Text>
-                                </View>
                                 <View style={styles.dataCell}>
                                     <Text style={styles.cellText}>
                                         {moment(value.timestamp).format('YYYY-MM-DD HH:mm:ss')}</Text>
@@ -253,58 +298,77 @@ const Administration = ({ navigation, route }) => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#E3E6E8',
         alignItems: 'center',
+        padding: 10,
     },
     formContainer: {
         width: '95%',
+        padding: 10,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 2,
     },
     tableContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        backgroundColor: 'white',
-        alignItems: 'center',
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginVertical: 10,
     },
     dataRowPair: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         backgroundColor: '#F5F8FA',
         alignItems: 'center',
+        padding: 5,
     },
     dataRowImpair: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         backgroundColor: '#E8ECEE',
         alignItems: 'center',
+        padding: 5,
     },
     tableHeader: {
-        width: '10%',
+        width: '12%',
         borderRightWidth: 1,
         borderRightColor: '#D7DADC',
-        padding: 5,
+        padding: 10,
+        backgroundColor: '#E3E6E8',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     dataCell: {
-        width: '10%',
+        width: '12%',
         borderRightWidth: 1,
         borderRightColor: '#D7DADC',
-        padding: 5,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     headerText: {
         fontWeight: 'bold',
-        color: 'black',
+        color: '#333',
+        fontSize: 14,
     },
     cellText: {
-        color: 'black',
+        color: '#555',
+        fontSize: 16,
     },
     title: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
-        color: 'black',
-        margin: 10,
+        color: '#333',
+        marginVertical: 10,
         textAlign: 'center',
     },
     buttonContainer: {
