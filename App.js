@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////
 //Bibliothèques
 ////////////////////////////////////////////////
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View,ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useState } from 'react';
@@ -31,14 +31,24 @@ import Administration from './screens/Administration_Sites';
 const App = () => {
 
   const [user, setUser] = useState();
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    onAuthStateChanged(auth, (u) => {
-      if (u) {
-        setUser(u)
-      }
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
     });
-  },[auth])
+
+    return () => unsubscribe();
+  }, [auth]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
