@@ -152,6 +152,10 @@ const Administration = ({ navigation, route }) => {
                 const data = snapshot.val();
                 if (data) {
                     const formattedData = Object.values(data);
+
+                    formattedData.map((item)=>{
+                        console.log(item.outdoor_humidity)
+                    })
                     setCollectedData(formattedData);
                     setSortByAsc(sortByAsc)
                 }
@@ -309,7 +313,7 @@ const Administration = ({ navigation, route }) => {
                                         labels: collectedData.map((value, index) => index % 5 === 0 ? moment(value.timestamp).format('HH:mm') : ''),
                                         datasets: [
                                             {
-                                                data: collectedData.map(value => value.outdoor_humidity),
+                                                data: collectedData.map(value => isNaN(value.outdoor_humidity) ? 0 : value.outdoor_humidity),
                                                 color: (opacity = 1) => `rgba(34, 32, 195, ${opacity})`,
                                                 strokeWidth: 3,
                                                 withDots: false,
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 5,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-around'
     },
     cellTextHeader: {
         flex: 1,
