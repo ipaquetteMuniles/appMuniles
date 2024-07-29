@@ -36,8 +36,7 @@ const Administration = ({ navigation, route }) => {
     const [textModal, setTextModal] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
     const [sortByAsc, setSortByAsc] = useState(true);
-    const [selectedZone, setSelectedZone] = useState('THERMOSTAT_2');
-    const [device_id,setDeviceId] = useState('9159953')
+    const [selectedZone, setSelectedZone] = useState('CGMR_2');
     const [zones, setZones] = useState([]);
     const [viewHumidity, setViewHumidity] = useState(false)
     const [viewFanIsRunning, setViewFanIsRunning] = useState(false)
@@ -61,22 +60,18 @@ const Administration = ({ navigation, route }) => {
                 const data = snapshot.val();
                 if (data) {
                     const uniqueZones = []
-                    Object.keys(data).forEach((key) => {
-                        Object.keys(data[key]).forEach((zoneName) => {
+                        Object.keys(data).forEach((zoneName) => {
                             uniqueZones.push({
-                                deviceId: key,
                                 zoneName: zoneName
                             });
                         });
-                    });
                     // Mettre à jour les zones avec les noms uniques
                     setZones(uniqueZones);
-
                 }
             });
 
             // Aller chercher les data des zones
-            const dataMonth = ref(database, `${device_id}/${selectedZone}`)
+            const dataMonth = ref(database, `${selectedZone}`)
 
             get(dataMonth)
                 .then((res) => {
@@ -146,16 +141,13 @@ const Administration = ({ navigation, route }) => {
 
 
             const formattedDate = getFormattedDate(selectedDate);
-            const dataRef = ref(database, `${device_id}/${selectedZone}/${formattedDate}`);
+            const dataRef = ref(database, `${selectedZone}/${formattedDate}`);
 
             onValue(dataRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     const formattedData = Object.values(data);
 
-                    formattedData.map((item)=>{
-                        console.log(item.outdoor_humidity)
-                    })
                     setCollectedData(formattedData);
                     setSortByAsc(sortByAsc)
                 }
@@ -212,11 +204,10 @@ const Administration = ({ navigation, route }) => {
                                     return (
                                             <TouchableOpacity key={index} onPress={() => {
                                                 setSelectedZone(zone.zoneName);
-                                                setDeviceId(zone.deviceId)
                                                 }}>
                                                 <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
                                                     <Text style={styles.cellText}>
-                                                        {zone.deviceId} - {zone.zoneName}
+                                                       {zone.zoneName}
                                                     </Text>
                                                 </View>
                                             </TouchableOpacity>
