@@ -42,14 +42,14 @@ const Administration = ({ navigation, route }) => {
     const [viewFanIsRunning, setViewFanIsRunning] = useState(false)
 
     const month = ["Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre"];
-    const currentMonth = new Date().getMonth()
+    const currentMonth = moment(selectedDate).month()
     const mois = month[currentMonth]
 
     const getFormattedDate = (date) => {
         return moment(date).format('YYYY-MM-DD') + '-THERMOSTAT_DATA';
     };
 
-    const fetchData = () => {
+    const fetchData = async() => {
         try {
             setLoading(true);
             setCollectedData([]);
@@ -60,11 +60,11 @@ const Administration = ({ navigation, route }) => {
                 const data = snapshot.val();
                 if (data) {
                     const uniqueZones = []
-                        Object.keys(data).forEach((zoneName) => {
-                            uniqueZones.push({
-                                zoneName: zoneName
-                            });
+                    Object.keys(data).forEach((zoneName) => {
+                        uniqueZones.push({
+                            zoneName: zoneName
                         });
+                    });
                     // Mettre à jour les zones avec les noms uniques
                     setZones(uniqueZones);
                 }
@@ -72,73 +72,54 @@ const Administration = ({ navigation, route }) => {
 
             // Aller chercher les data des zones
             const dataMonth = ref(database, `${selectedZone}`)
+            const res = await get(dataMonth);
 
-            get(dataMonth)
-                .then((res) => {
-                    if (res.exists()) {
-                        const j = res.toJSON();
-                        const keys = Object.keys(j);
-                        let arrayMonths = {};
+            if (res.exists()) {
+                const data = res.toJSON();
+                const keys = Object.keys(data);
 
-                        keys.map((key) => {
-                            let month = key.split('-')[1];
-                            month = month.startsWith('0') ? month.slice(1) : month;
+                // Transform the data for CSV
+                let csvData = [];
+                let csvHeaders = [
+                    "cool_setpoint",
+                    "device_id",
+                    "display_temperature",
+                    "display_units",
+                    "fan_is_running",
+                    "heat_setpoint",
+                    "outdoor_humidity",
+                    "outdoor_temperature",
+                    "timestamp",
+                    "zone_name"
+                ];
+                csvData.push(csvHeaders);
 
-                            if (!arrayMonths[month]) {
-                                arrayMonths[month] = {};
-                            }
+                keys.forEach((key) => {
+                    let month = key.split('-')[1];
+                    month = month.startsWith('0') ? month.slice(1) : month;
 
-                            if (!arrayMonths[month][key]) {
-                                arrayMonths[month][key] = [];
-                            }
-
-                            arrayMonths[month][key].push(j[key]);
-                        });
-
-                        // Transform the data for CSV
-                        let csvData = [];
-                        let csvHeaders = [
-                            "cool_setpoint",
-                            "device_id",
-                            "display_temperature",
-                            "display_units",
-                            "fan_is_running",
-                            "heat_setpoint",
-                            "outdoor_humidity",
-                            "outdoor_temperature",
-                            "timestamp",
-                            "zone_name"
-                        ];
-
-                        csvData.push(csvHeaders);
-
-                        Object.keys(arrayMonths).forEach(month => {
-                            Object.keys(arrayMonths[month]).forEach(date => {
-                                Object.keys(arrayMonths[month][date]).forEach(k => {
-                                    Object.values(arrayMonths[month][date][k]).forEach((item) => {
-                                        let row = [
-                                            item.cool_setpoint,
-                                            item.device_id,
-                                            item.display_temperature,
-                                            item.display_units,
-                                            item.fan_is_running,
-                                            item.heat_setpoint,
-                                            item.outdoor_humidity,
-                                            item.outdoor_temperature,
-                                            item.timestamp,
-                                            item.zone_name
-                                        ];
-                                        csvData.push(row);
-                                    })
-
-                                });
-                            });
-                        });
-
-                        setMonthData(csvData)
+                    if (parseInt(month, 10) === currentMonth + 1) {
+                        Object.keys(data[key]).forEach((id)=>{
+                                csvData.push([
+                                    data[key][id].cool_setpoint,
+                                    data[key][id].device_id,
+                                    data[key][id].display_temperature,
+                                    data[key][id].display_units,
+                                    data[key][id].fan_is_running,
+                                    data[key][id].heat_setpoint,
+                                    data[key][id].outdoor_humidity,
+                                    data[key][id].outdoor_temperature,
+                                    data[key][id].timestamp,
+                                    data[key][id].zone_name
+                                ]);
+                            })
+                        
+                     
                     }
                 });
 
+                setMonthData(csvData);
+            }
 
             const formattedDate = getFormattedDate(selectedDate);
             const dataRef = ref(database, `${selectedZone}/${formattedDate}`);
@@ -202,15 +183,15 @@ const Administration = ({ navigation, route }) => {
                                 {zones.map((zone, index) => {
 
                                     return (
-                                            <TouchableOpacity key={index} onPress={() => {
-                                                setSelectedZone(zone.zoneName);
-                                                }}>
-                                                <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
-                                                    <Text style={styles.cellText}>
-                                                       {zone.zoneName}
-                                                    </Text>
-                                                </View>
-                                            </TouchableOpacity>
+                                        <TouchableOpacity key={index} onPress={() => {
+                                            setSelectedZone(zone.zoneName);
+                                        }}>
+                                            <View style={index % 2 === 0 ? styles.dataRowPair : styles.dataRowImpair}>
+                                                <Text style={styles.cellText}>
+                                                    {zone.zoneName}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
                                     )
                                 })}
                             </View>
@@ -225,7 +206,7 @@ const Administration = ({ navigation, route }) => {
                                     markedDates={{
                                         [selectedDate]: { selected: true, disableTouchEvent: true, selectedDotColor: 'blue' },
                                     }}
-                                    maxDate={new Date()}
+                                    maxDate={moment(new Date()).format('YYYY-MM-DD')}
                                 />
                                 <Text style={styles.title}>{selectedDate.toString()}</Text>
 
@@ -264,7 +245,7 @@ const Administration = ({ navigation, route }) => {
                             </View>
 
                             <CsvDownloadButton data={collectedData} filename={`donnees_${selectedDate}.csv`}>
-                                <Text style={styles.downloadButton}>Télécharger CSV</Text>
+                                <Text style={styles.downloadButton}>Télécharger {moment(selectedDate).format('YYYY-MM-DD')}</Text>
                             </CsvDownloadButton>
 
                             <CsvDownloadButton data={monthData} filename={`donnees_${mois}.csv`}>
