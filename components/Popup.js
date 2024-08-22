@@ -16,6 +16,7 @@ import {
   Modal,
   StyleSheet
 } from 'react-native';
+import FormButton from './FormButton';
 
 const Popup = ({text,fct,fctText,setModalVisible,modalVisible,onCloseFct,...rest}) => {
     return (
@@ -41,7 +42,6 @@ const Popup = ({text,fct,fctText,setModalVisible,modalVisible,onCloseFct,...rest
               {text}
             </Text>
 
-            {/* delete ingrdient from fridge */}
             {(fct && fctText) && (
                <View
               style={{
@@ -52,7 +52,7 @@ const Popup = ({text,fct,fctText,setModalVisible,modalVisible,onCloseFct,...rest
               }}>
               <TouchableOpacity
                 onPress={() => {
-                  fct()
+          
                   setModalVisible(!modalVisible);
                 }}>
                 <Text style={{ color: 'white' }}>{fctText}</Text>
@@ -62,17 +62,7 @@ const Popup = ({text,fct,fctText,setModalVisible,modalVisible,onCloseFct,...rest
            
 
             {/* close modal button */}
-            <View
-              style={{
-                margin: 10,
-                padding: 10,
-                borderRadius: 25,
-                backgroundColor:'red'
-              }}>
-              <TouchableOpacity onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={{color:'white'}}>Close</Text>
-              </TouchableOpacity>
-            </View>
+            <FormButton buttonTitle={'Close'} backgroundColor='red' color='white' onPress={()=>setModalVisible(!modalVisible)}/>
           </View>
         </View>
       </Modal>
