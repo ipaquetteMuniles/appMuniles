@@ -26,6 +26,7 @@ import Header from '../components/header';
 import FormButton from '../components/FormButton';
 import Popup from '../components/Popup';
 import { database } from '../firebase/fire';
+import axios from 'axios';
 
 const Administration = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
@@ -38,6 +39,7 @@ const Administration = ({ navigation, route }) => {
     const [sortByAsc, setSortByAsc] = useState(true);
     const [selectedZone, setSelectedZone] = useState('CGMR_2');
     const [zones, setZones] = useState([]);
+    const [serverIsRunning,setServerisRunning] = useState(false)
     const [viewHumidity, setViewHumidity] = useState(false)
     const [viewFanIsRunning, setViewFanIsRunning] = useState(false)
 
@@ -45,13 +47,14 @@ const Administration = ({ navigation, route }) => {
     const currentMonth = moment(selectedDate).month()
     const mois = month[currentMonth]
 
+    const url_server = 'https://munilesthermostats.pythonanywhere.com/'
+
     const getFormattedDate = (date) => {
         return moment(date).format('YYYY-MM-DD') + '-THERMOSTAT_DATA';
     };
 
     const fetchData = async() => {
         try {
-            setLoading(true);
             setCollectedData([]);
             // Aller chercher les différentes zones
             const zoneRef = ref(database, '/');
@@ -140,8 +143,6 @@ const Administration = ({ navigation, route }) => {
             console.log(err);
             setTextModal("Erreur lors de la requête des données. Réessayez plus tard.");
             setModalVisible(true);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -155,8 +156,68 @@ const Administration = ({ navigation, route }) => {
         setSortByAsc(!sortByAsc); // Inverser l'ordre de tri après chaque clic
     };
 
+    const startServer = async() =>
+    {
+        setLoading(true)
+        await axios.post(url_server+'start')
+        .then((res)=>{
+            setServerisRunning(true)
+            setTextModal('Serveur parti ! :) ')
+            setModalVisible(true)
+        })
+        .catch((err)=>{
+            console.log(err)
+            setModalVisible(true)
+            setTextModal('Erreur lors du démarrage du serveur, veuillez réessayer plus tard...')
+        })
+        setLoading(false)
+    }
+
+    const stopServer = async() =>{
+        setLoading(true)
+
+        await axios.post(url_server + 'stop')
+        .then(()=>{
+            setServerisRunning(false)
+            setTextModal('Serveur arrete ! :)')
+            setModalVisible(true)
+        })
+        .catch((err)=>{
+            console.log(err)
+            setModalVisible(true)
+            setTextModal("Erreur lors de l' arrêt du serveur, veuillez réessayer plus tard...")
+        })
+
+        setLoading(false)
+    }
+
+    const getStatus = async() =>{
+        await axios.get(url_server + 'get_status')
+        .then((res)=>{
+            const status = res.status
+            if(status == 205){
+                setServerisRunning(true)
+                setTextModal('Le serveur roule !')
+                setModalVisible(true)
+            }
+            else if (status == 206)
+            {
+                setServerisRunning(false)
+                setTextModal('Le serveur est présentement arrêté !')
+                setModalVisible(true)
+            }
+
+        })
+        .catch((err)=>console.log(err))
+    }
+
     useEffect(() => {
+        setLoading(true);
+
         fetchData();
+        getStatus()
+
+        setLoading(false);
     }, []);
 
     if (loading) {
@@ -207,6 +268,7 @@ const Administration = ({ navigation, route }) => {
                                         [selectedDate]: { selected: true, disableTouchEvent: true, selectedDotColor: 'blue' },
                                     }}
                                     maxDate={moment(new Date()).format('YYYY-MM-DD')}
+                                    theme={{arrowColor:'#060270'}}
                                 />
                                 <Text style={styles.title}>{selectedDate.toString()}</Text>
 
@@ -244,6 +306,14 @@ const Administration = ({ navigation, route }) => {
                                 </TouchableOpacity>
                             </View>
 
+                            <View>
+                                {serverIsRunning ? (
+                                    <FormButton buttonTitle={'Arrêter le serveur'} backgroundColor='red' onPress={stopServer} color='white'/>
+                                ):(
+                                    <FormButton buttonTitle={'Démarrer le serveur'} backgroundColor='green' onPress={startServer} color='white'/>
+                                )}
+                            </View>
+
                             <CsvDownloadButton data={collectedData} filename={`donnees_${selectedDate}.csv`}>
                                 <Text style={styles.downloadButton}>Télécharger {moment(selectedDate).format('YYYY-MM-DD')}</Text>
                             </CsvDownloadButton>
@@ -268,14 +338,14 @@ const Administration = ({ navigation, route }) => {
                                         value={viewHumidity}
                                         onValueChange={() => setViewHumidity(!viewHumidity)}
                                     />
-                                    <Text style={styles.checkboxLabel}>Humidity</Text>
+                                    <Text style={styles.checkboxLabel}>Humidité</Text>
                                 </View>
                                 <View style={styles.checkboxContainer}>
                                     <Checkbox
                                         value={viewFanIsRunning}
                                         onValueChange={() => setViewFanIsRunning(!viewFanIsRunning)}
                                     />
-                                    <Text style={styles.checkboxLabel}>Fan Is Running</Text>
+                                    <Text style={styles.checkboxLabel}>Fan</Text>
                                 </View>
                             </View>
 
@@ -423,7 +493,11 @@ const Administration = ({ navigation, route }) => {
                 </View>
             </ScrollView>
 
-            <Popup text={textModal} visible={modalVisible} setVisible={setModalVisible} />
+            <Popup
+                text={textModal}
+                setModalVisible={setModalVisible}
+                modalVisible={modalVisible}
+            />
         </View>
     );
 };
@@ -581,6 +655,5 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
 });
-
 
 export default Administration;
